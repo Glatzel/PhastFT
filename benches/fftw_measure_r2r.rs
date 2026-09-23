@@ -23,7 +23,7 @@ mod fftw_lib;
 fn run(c: &mut Criterion) {
     fftw_lib::run_c2c(
         c,
-        common::ids::FFTW_MEASURE_C2C,
+        common::ids::FFTW_MEASURE_R2R,
         Flag::DESTROYINPUT | Flag::MEASURE,
     );
 }

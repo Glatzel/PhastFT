@@ -24,7 +24,7 @@ mod fftw_lib;
 fn run(c: &mut Criterion) {
     fftw_lib::run_c2c(
         c,
-        common::ids::FFTW_CONSERVE,
+        common::ids::FFTW_CONSERVE_C2C,
         Flag::DESTROYINPUT | Flag::MEASURE | Flag::CONSERVEMEMORY,
     );
 }

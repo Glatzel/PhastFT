@@ -259,9 +259,18 @@ pub mod ids {
     pub const RUSTFFT: &str = "RustFFT";
     pub const REALFFT: &str = "realfft";
 
-    pub const FFTW_ESTIMATE: &str = "FFTW Estimate";
-    pub const FFTW_MEASURE: &str = "FFTW Measure";
-    pub const FFTW_CONSERVE: &str = "FFTW Conserve";
+    pub const FFTW_ESTIMATE_C2C: &str = "FFTW Estimate C2C";
+    pub const FFTW_MEASURE_C2C: &str = "FFTW Measure C2C";
+    pub const FFTW_CONSERVE_C2C: &str = "FFTW Conserve C2C";
+    pub const FFTW_ESTIMATE_R2C: &str = "FFTW Estimate R2C";
+    pub const FFTW_MEASURE_R2C: &str = "FFTW Measure R2C";
+    pub const FFTW_CONSERVE_R2C: &str = "FFTW Conserve R2C";
+    pub const FFTW_ESTIMATE_C2R: &str = "FFTW Estimate C2R";
+    pub const FFTW_MEASURE_C2R: &str = "FFTW Measure C2R";
+    pub const FFTW_CONSERVE_C2R: &str = "FFTW Conserve C2R";
+    pub const FFTW_ESTIMATE_R2R: &str = "FFTW Estimate R2R";
+    pub const FFTW_MEASURE_R2R: &str = "FFTW Measure R2R";
+    pub const FFTW_CONSERVE_R2R: &str = "FFTW Conserve R2R";
 
     pub const HEURISTIC: &str = "Heuristic";
     pub const TUNE: &str = "Tune";

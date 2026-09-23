@@ -18,7 +18,7 @@ mod fftw_lib;
 fn run(c: &mut Criterion) {
     fftw_lib::run_c2c(
         c,
-        common::ids::FFTW_ESTIMATE,
+        common::ids::FFTW_ESTIMATE_C2C,
         Flag::DESTROYINPUT | Flag::ESTIMATE,
     );
 }

@@ -65,11 +65,27 @@ harness = false
 required-features = ["bench-internals"]
 
 [[bench]]
+name = "fftw_conserve_c2c"
+harness = false
+
+[[bench]]
+name = "fftw_conserve_r2c_c2r"
+harness = false
+
+[[bench]]
+name = "fftw_conserve_r2r"
+harness = false
+
+[[bench]]
 name = "fftw_estimate_c2c"
 harness = false
 
 [[bench]]
 name = "fftw_estimate_r2c_c2r"
+harness = false
+
+[[bench]]
+name = "fftw_estimate_r2r"
 harness = false
 
 [[bench]]
@@ -81,11 +97,7 @@ name = "fftw_measure_r2c_c2r"
 harness = false
 
 [[bench]]
-name = "fftw_conserve_c2c"
-harness = false
-
-[[bench]]
-name = "fftw_conserve_r2c_c2r"
+name = "fftw_measure_r2r"
 harness = false
 
 [[bench]]
