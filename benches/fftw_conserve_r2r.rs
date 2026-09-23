@@ -6,7 +6,7 @@
 //! `[[bench]]` binary so FFTW's global per-process wisdom cache cannot leak
 //! between modes; each run starts with a fresh process and empty wisdom.
 //! Group names are shared with `bench.rs` / `rustfft.rs` / the other
-//! `fftw_*.rs` binaries; criterion does NOT auto-aggregate across binaries
+//! `fftw_*_r2r.rs` binaries; criterion does NOT auto-aggregate across binaries
 //! — use `benches/plot_criterion_overlay.py` for the cross-binary overlay.
 //!
 //! This series combines MEASURE with `FFTW_CONSERVE_MEMORY` so FFTW selects
