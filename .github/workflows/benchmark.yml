@@ -14,18 +14,10 @@ jobs:
     strategy:
       matrix:
         option:
-          - --bench bench
-          - --bench rustfft
-          - --bench fftw_conserve_c2c
-          - --bench fftw_conserve_r2c_c2r
-          - --bench fftw_conserve_r2r
-          - --bench fftw_estimate_c2c
-          - --bench fftw_estimate_r2c_c2r
-          - --bench fftw_estimate_r2r
-          - --bench fftw_measure_c2c
-          - --bench fftw_measure_r2c_c2r
-          - --bench fftw_measure_r2r
-          - --bench realfft
+          # c2c
+          - --bench bench --bench rustfft --bench fftw_conserve_c2c --bench fftw_estimate_c2c --bench fftw_measure_c2c
+          # r2c/c2r
+          - --bench fftw_conserve_r2c_c2r --bench fftw_conserve_r2r --bench fftw_estimate_r2c_c2r --bench fftw_estimate_r2r --bench fftw_measure_r2c_c2r --bench fftw_measure_r2r --bench realfft
           - --bench planner
           - --bench interleave --all-features
           - --bench bit_reversal --all-features
