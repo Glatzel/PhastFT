@@ -304,7 +304,7 @@ pub fn run_r2c_c2r(c: &mut Criterion, id_r2c: &str, id_c2r: &str, flags: Flag) {
     c2r_f64(c, id_c2r, mk());
 }
 
-/// Run all four r2c/c2r groups (r2c/c2r × f32/f64) with the given
+/// Run all four rr groups (r2r × f32/f64) with the given
 /// FFTW `flags` and series `id`. The three per-mode bench binaries each
 /// call this once with their own `Flag` set.
 pub fn run_r2r(c: &mut Criterion, id: &str, flags: Flag) {
