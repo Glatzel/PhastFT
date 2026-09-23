@@ -57,7 +57,7 @@ harness = false
 [[bench]]
 name = "interleave"
 harness = false
-required-features = ["complex-nums"]
+required-features = ["bench-internals", "complex-nums"]
 
 [[bench]]
 name = "bit_reversal"
