@@ -8,6 +8,11 @@
 //! Group names are shared with `bench.rs` / `rustfft.rs` / the other
 //! `fftw_*.rs` binaries; criterion does NOT auto-aggregate across binaries
 //! — use `benches/plot_criterion_overlay.py` for the cross-binary overlay.
+//!
+//! FFTW's MEASURE is the default rigor level (bit value 0 in the fftw
+//! crate's `Flag` bitflags), so `| Flag::MEASURE` is a no-op at runtime; it
+//! is kept here so the selected rigor level is visible alongside the other
+//! flags.
 
 use criterion::{criterion_group, criterion_main, Criterion};
 use fftw::types::Flag;
@@ -16,10 +21,10 @@ mod common;
 mod fftw_lib;
 
 fn run(c: &mut Criterion) {
-    fftw_lib::run_all(
+    fftw_lib::run_c2c(
         c,
-        common::ids::FFTW_ESTIMATE,
-        Flag::DESTROYINPUT | Flag::ESTIMATE,
+        common::ids::FFTW_MEASURE,
+        Flag::DESTROYINPUT | Flag::MEASURE,
     );
 }
 

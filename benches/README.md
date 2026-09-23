@@ -26,39 +26,44 @@ cargo bench --bench <name>                 # one bench target
 cargo bench --all-features                 # every target
 ```
 
-| Bench target    | Required features  | Coverage                                                                                                                                                                                                  |
-|-----------------|--------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `bench`         | (none)             | PhastFT complex FFT (`fft_{32,64}_dit_with_planner_and_opts`) — forward + inverse, f32 + f64.                                                                                                             |
-| `rustfft`       | (none)             | Same sizes routed through RustFFT.                                                                                                                                                                        |
-| `fftw_estimate` | (none)             | Same sizes through FFTW with `FFTW_ESTIMATE`.                                                                                                                                                             |
-| `fftw_measure`  | (none)             | Same sizes through FFTW with `FFTW_MEASURE`.                                                                                                                                                              |
-| `fftw_conserve` | (none)             | Same sizes through FFTW with `FFTW_MEASURE \| FFTW_CONSERVE_MEMORY` — the apples-to-apples comparison for PhastFT's low-memory design.                                                                    |
-| `realfft`       | (none)             | PhastFT R2C/C2R (`r2c_fft_*`, `c2r_fft_*`) vs. the `realfft` crate — forward + inverse, f32 + f64.                                                                                                        |
-| `planner`       | (none)             | Planner construction cost (`PlannerDit{32,64}::new` vs. RustFFT's `FftPlanner::plan_fft_forward`).                                                                                                        |
-| `interleave`    | `complex-nums`     | Internal SIMD interleave / deinterleave kernels.                                                                                                                                                          |
-| `bit_reversal`  | `bench-internals`  | Five bit-reversal kernels head-to-head — CO-BRAVO, BRAVO, COBRA, Elaan, Naive ([`BIT_REVERSAL.md`](BIT_REVERSAL.md)).                                                                                     |
+| Bench target             | Required features | Coverage                                                                                                                               |
+| ------------------------ | ----------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `bench`                  | (none)            | PhastFT complex FFT (`fft_{32,64}_dit_with_planner_and_opts`) — forward + inverse, f32 + f64.                                          |
+| `rustfft`                | (none)            | Same sizes routed through RustFFT.                                                                                                     |
+| `fftw_estimatec_c2c`     | (none)            | Same sizes through FFTW with `FFTW_ESTIMATE`.                                                                                          |
+| `fftw_estimatec_r2c_c2r` | (none)            | Same sizes through FFTW with `FFTW_ESTIMATE` for R2C/C2R transforms.                                                                   |
+| `fftw_measure_c2c`       | (none)            | Same sizes through FFTW with `FFTW_MEASURE`.                                                                                           |
+| `fftw_measure_r2c_c2r`   | (none)            | Same sizes through FFTW with `FFTW_MEASURE` for R2C/C2R transforms.                                                                    |
+| `fftw_conserve_c2c`      | (none)            | Same sizes through FFTW with `FFTW_MEASURE \| FFTW_CONSERVE_MEMORY` — the apples-to-apples comparison for PhastFT's low-memory design. |
+| `fftw_measure_r2c_c2r`   | (none)            | Same sizes through FFTW with `FFTW_MEASURE` for R2C/C2R transforms.                                                                    |
+| `realfft`                | (none)            | PhastFT R2C/C2R (`r2c_fft_*`, `c2r_fft_*`) vs. the `realfft` crate — forward + inverse, f32 + f64.                                     |
+| `planner`                | (none)            | Planner construction cost (`PlannerDit{32,64}::new` vs. RustFFT's `FftPlanner::plan_fft_forward`).                                     |
+| `interleave`             | `complex-nums`    | Internal SIMD interleave / deinterleave kernels.                                                                                       |
+| `bit_reversal`           | `bench-internals` | Five bit-reversal kernels head-to-head — CO-BRAVO, BRAVO, COBRA, Elaan, Naive ([`BIT_REVERSAL.md`](BIT_REVERSAL.md)).                  |
 
 ### Why the complex comparison is split across five binaries
 
 PhastFT vs. RustFFT vs. FFTW (three planning modes) is split across
 **five** separate `[[bench]]` binaries (`bench`, `rustfft`,
-`fftw_estimate`, `fftw_measure`, `fftw_conserve`) so FFTW's per-process
+`fftw_estimate_c2c`, `fftw_measure_c2c`, `fftw_conserve_c2c`) 
+so FFTW's per-process
 wisdom cache cannot leak between planning modes — every run starts with
 a fresh process and empty wisdom. All five write into the same shared
 criterion group folders: `c2c_forward_f32`, `c2c_inverse_f32`,
 `c2c_forward_f64`, `c2c_inverse_f64`.
 
-The three FFTW binaries each call `fftw_lib::run_all(c, id, flags)` to
-emit all four C2C groups — the shared body lives once in
-`benches/fftw_lib/mod.rs` so only the per-mode `Flag` set and series ID
-differ between the three.
-
-The R2C/C2R cross-library comparison lives in **one** binary
-(`realfft`) because the `realfft` crate has no per-process planner cache
+The R2C/C2R cross-library comparison lives in **three** binary
+(`realfft`, `fftw_estimate_r2c_c2r`, `fftw_measure_r2c_c2r`, `fftw_conserve_r2c_c2r`) 
+because the `realfft` crate has no per-process planner cache
 to isolate. Its groups (`r2c_f{32,64}`, `c2r_f{32,64}`) are distinct
 from the C2C groups, so no cross-binary aggregation is needed. R2C is
 forward by definition and C2R is inverse by definition — direction is
 implicit in the prefix.
+
+The six FFTW binaries each call `fftw_lib::run_all(c, id, flags)` to
+emit all four C2C groups — the shared body lives once in
+`benches/fftw_lib/mod.rs` so only the per-mode `Flag` set and series ID
+differ between the six.
 
 ### Cross-binary overlay plots
 
@@ -164,13 +169,13 @@ Each size's iteration count is derived from an N·log2(N) cost model
 targeting `BUDGET_NS` (default 2 s) of wall clock. Override with
 environment variables:
 
-| Variable      | Default      | Controls                                  |
-|---------------|--------------|-------------------------------------------|
+| Variable      | Default      | Controls                                   |
+| ------------- | ------------ | ------------------------------------------ |
 | `PRECISION`   | `32`         | `32` or `64` — single or double precision. |
-| `BUDGET_NS`   | `2000000000` | Target wall-clock ns per size.            |
-| `OVERHEAD_NS` | `200`        | Modeled fixed cost per iteration.         |
-| `MIN_ITERS`   | `100`        | Floor on per-size iteration count.        |
-| `MAX_ITERS`   | `10000000`   | Cap on per-size iteration count.          |
+| `BUDGET_NS`   | `2000000000` | Target wall-clock ns per size.             |
+| `OVERHEAD_NS` | `200`        | Modeled fixed cost per iteration.          |
+| `MIN_ITERS`   | `100`        | Floor on per-size iteration count.         |
+| `MAX_ITERS`   | `10000000`   | Cap on per-size iteration count.           |
 
 Output layout:
 

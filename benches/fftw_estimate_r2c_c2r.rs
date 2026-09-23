@@ -8,12 +8,6 @@
 //! Group names are shared with `bench.rs` / `rustfft.rs` / the other
 //! `fftw_*.rs` binaries; criterion does NOT auto-aggregate across binaries
 //! — use `benches/plot_criterion_overlay.py` for the cross-binary overlay.
-//!
-//! This series combines MEASURE with `FFTW_CONSERVE_MEMORY` so FFTW selects
-//! memory-efficient plan variants during the same search it would run for
-//! plain MEASURE. This is a more faithful comparison for PhastFT, which is
-//! also designed for low memory overhead — plain PATIENT / MEASURE let
-//! FFTW spend memory freely in pursuit of speed.
 
 use criterion::{criterion_group, criterion_main, Criterion};
 use fftw::types::Flag;
@@ -22,10 +16,10 @@ mod common;
 mod fftw_lib;
 
 fn run(c: &mut Criterion) {
-    fftw_lib::run_all(
+    fftw_lib::run_r2c_c2r(
         c,
-        common::ids::FFTW_CONSERVE,
-        Flag::DESTROYINPUT | Flag::MEASURE | Flag::CONSERVEMEMORY,
+        common::ids::FFTW_ESTIMATE,
+        Flag::DESTROYINPUT | Flag::ESTIMATE,
     );
 }
 
