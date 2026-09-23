@@ -31,8 +31,8 @@ cargo bench --all-features                 # every target
 | `bench`                  | (none)            | PhastFT complex FFT (`fft_{32,64}_dit_with_planner_and_opts`) — forward + inverse, f32 + f64.                                          |
 | `rustfft`                | (none)            | Same sizes routed through RustFFT.                                                                                                     |
 | `fftw_conserve_c2c`      | (none)            | Same sizes through FFTW with `FFTW_MEASURE \| FFTW_CONSERVE_MEMORY` — the apples-to-apples comparison for PhastFT's low-memory design. |
-| `fftw_converse_r2c_c2r` | (none)            | Same sizes through FFTW with `FFTW_ESTIMATE` for R2C/C2R transforms.                                                                   |
-| `fftw_converse_r2r`     | (none)            | Same sizes through FFTW with `FFTW_ESTIMATE` for R2R transforms.                                                                       |
+| `fftw_conserve_r2c_c2r` | (none)            | Same sizes through FFTW with `FFTW_ESTIMATE` for R2C/C2R transforms.                                                                   |
+| `fftw_conserve_r2r`     | (none)            | Same sizes through FFTW with `FFTW_ESTIMATE` for R2R transforms.                                                                       |
 | `fftw_estimate_c2c`     | (none)            | Same sizes through FFTW with `FFTW_ESTIMATE`.                                                                                          |
 | `fftw_estimate_r2c_c2r` | (none)            | Same sizes through FFTW with `FFTW_ESTIMATE` for R2C/C2R transforms.                                                                   |
 | `fftw_estimate_r2r`     | (none)            | Same sizes through FFTW with `FFTW_ESTIMATE` for R2R transforms.                                                                       |
