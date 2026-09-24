@@ -285,7 +285,7 @@ def _color_for(series_name: str) -> str:
     return _UNKNOWN_COLOR
 
 
-def plot_half(
+def plot_group_item(
     group_name: str,
     baseline: str,
     series_names: list[str],
@@ -438,7 +438,7 @@ def plot_group(
         n_lo = int(math.log2(half[0]))
         n_hi = int(math.log2(half[-1]))
         out_stem = out_dir / f"criterion_overlay_{group_name}_{n_lo}_{n_hi}"
-        plot_half(group_name, baseline, series_names, group_data, half, out_stem)
+        plot_group_item(group_name, baseline, series_names, group_data, half, out_stem)
         active = sum(1 for s in series_names if any(sz in group_data[s] for sz in half))
         print(
             f"wrote {out_stem.with_suffix('.svg')} "
