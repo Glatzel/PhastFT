@@ -381,7 +381,7 @@ def plot_half(
 
     ax.legend(
         loc="upper left",
-        ncol=len(series_names),
+        ncol=min(len(series_names), 5),
         columnspacing=1.4,
         handlelength=1.2,
         handleheight=1.0,
