@@ -26,48 +26,37 @@ cargo bench --bench <name>                 # one bench target
 cargo bench --all-features                 # every target
 ```
 
-| Bench target             | Required features | Coverage                                                                                                                               |
-| ------------------------ | ----------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| `bench`                  | (none)            | PhastFT complex FFT (`fft_{32,64}_dit_with_planner_and_opts`) — forward + inverse, f32 + f64.                                          |
-| `rustfft`                | (none)            | Same sizes routed through RustFFT.                                                                                                     |
-| `fftw_conserve_c2c`      | (none)            | Same sizes through FFTW with `FFTW_MEASURE \| FFTW_CONSERVE_MEMORY` — the apples-to-apples comparison for PhastFT's low-memory design. |
-| `fftw_conserve_r2c_c2r` | (none)            | Same sizes through FFTW with `FFTW_ESTIMATE` for R2C/C2R transforms.                                                                   |
-| `fftw_conserve_r2r`     | (none)            | Same sizes through FFTW with `FFTW_ESTIMATE` for R2R transforms.                                                                       |
-| `fftw_estimate_c2c`     | (none)            | Same sizes through FFTW with `FFTW_ESTIMATE`.                                                                                          |
-| `fftw_estimate_r2c_c2r` | (none)            | Same sizes through FFTW with `FFTW_ESTIMATE` for R2C/C2R transforms.                                                                   |
-| `fftw_estimate_r2r`     | (none)            | Same sizes through FFTW with `FFTW_ESTIMATE` for R2R transforms.                                                                       |
-| `fftw_measure_c2c`       | (none)            | Same sizes through FFTW with `FFTW_MEASURE`.                                                                                           |
-| `fftw_measure_r2c_c2r`   | (none)            | Same sizes through FFTW with `FFTW_MEASURE` for R2C/C2R transforms.                                                                    |
-| `fftw_measure_r2r`       | (none)            | Same sizes through FFTW with `FFTW_MEASURE` for R2R transforms.                                                                        |
-| `realfft`                | (none)            | PhastFT R2C/C2R (`r2c_fft_*`, `c2r_fft_*`) vs. the `realfft` crate — forward + inverse, f32 + f64.                                     |
-| `planner`                | (none)            | Planner construction cost (`PlannerDit{32,64}::new` vs. RustFFT's `FftPlanner::plan_fft_forward`).                                     |
-| `interleave`             | `complex-nums`    | Internal SIMD interleave / deinterleave kernels.                                                                                       |
-| `bit_reversal`           | `bench-internals` | Five bit-reversal kernels head-to-head — CO-BRAVO, BRAVO, COBRA, Elaan, Naive ([`BIT_REVERSAL.md`](BIT_REVERSAL.md)).                  |
+| Bench target            | Required features                 | Coverage                                                                                                              |
+| ----------------------- | --------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `c2c_forward`           | (none)                            | PhastFT complex FFT (`fft_{32,64}_dit_with_planner_and_opts`) vs. RustFFT vs. FFTW C2C — forward , f32 + f64.         |
+| `c2c_inverse`           | (none)                            | PhastFT complex FFT (`fft_{32,64}_dit_with_planner_and_opts`) vs. RustFFT vs. FFTW C2C — inverse , f32 + f64.         |
+| `r2c`                   | (none)                            | PhastFT R2C (`r2c_fft_*`) vs. the `realfft` crate vs. FFTW R2C vs. FFTW R2R — forward , f32 + f64.                    |
+| `c2r`                   | (none)                            | PhastFT R2C (`c2r_fft_*`) vs. the `realfft` crate vs. FFTW C2C vs. FFTW R2R — inverse , f32 + f64.                    |
+| `planner`               | (none)                            | Planner construction cost (`PlannerDit{32,64}::new` vs. RustFFT's `FftPlanner::plan_fft_forward`).                    |
+| `interleave`            | `complex-nums`, `bench-internals` | Internal SIMD interleave / deinterleave kernels.                                                                      |
+| `bit_reversal`          | `bench-internals`                 | Five bit-reversal kernels head-to-head — CO-BRAVO, BRAVO, COBRA, Elaan, Naive ([`BIT_REVERSAL.md`](BIT_REVERSAL.md)). |
 
-### Why the complex comparison is split across five binaries
+### Benchmark organization
 
-PhastFT vs. RustFFT vs. FFTW (three planning modes) is split across
-**five** separate `[[bench]]` binaries (`bench`, `rustfft`, `fftw_conserve_c2c`,
-`fftw_estimate_c2c`, `fftw_measure_c2c`)
-so FFTW's per-process
-wisdom cache cannot leak between planning modes — every run starts with
-a fresh process and empty wisdom. All five write into the same shared
-criterion group folders: `c2c_forward_f32`, `c2c_inverse_f32`,
-`c2c_forward_f64`, `c2c_inverse_f64`.
+The benchmark suite is split into four binaries by FFT transform type and
+direction: `c2c_forward`, `c2c_inverse`, `r2c`, and `c2r`. Each binary
+contains the cross-library comparison for its corresponding operation and
+covers both f32 and f64.
 
-The R2C/C2R cross-library comparison lives in **seven** binary
-(`realfft`, `fftw_conserve_r2c_c2r`, `fftw_estimate_r2c_c2r`, `fftw_measure_r2c_c2r`,
-`fftw_conserve_r2r`, `fftw_estimate_r2r`, `fftw_measure_r2r`)
-because the `realfft` crate has no per-process planner cache
-to isolate. Its groups (`r2c_f{32,64}`, `c2r_f{32,64}`) are distinct
-from the C2C groups, so no cross-binary aggregation is needed. R2C is
-forward by definition and C2R is inverse by definition — direction is
-implicit in the prefix.
+The C2C comparisons include PhastFT, RustFFT, and FFTW. FFTW is benchmarked
+with its three planning modes (`estimate`, `measure`, and `conserve`). The
+FFTW benchmark implementation is shared in `benches/fftw_lib/mod.rs`; only
+the planning flags and series identifier differ between the three modes.
 
-The nine FFTW binaries each call `fftw_lib::run_{PLANNER}(c, id, flags)` to
-emit all four C2C/R2C/C2R/R2R groups — the shared body lives once in
-`benches/fftw_lib/mod.rs` so only the per-mode `Flag` set and series ID
-differ between the nine.
+The R2C/C2R comparisons include PhastFT, `realfft`, and the applicable FFTW
+implementations. R2C represents the forward real-to-complex transform, while
+C2R represents the inverse complex-to-real transform, so the direction is
+implicit in the benchmark name.
+
+The benchmark groups are therefore organized by operation:
+`c2c_forward_f{32,64}`, `c2c_inverse_f{32,64}`, `r2c_f{32,64}`, and
+`c2r_f{32,64}`. No cross-binary aggregation is required because each
+operation has its own benchmark binary.
 
 ### Cross-binary overlay plots
 
