@@ -25,6 +25,10 @@ use crate::common::{
 
 macro_rules! phastft_c2c {
     ($name:ident, $float:ty, $planner:ty, $fft:ident, $dir:expr, $group:expr) => {
+        #[allow(
+            dead_code,
+            reason = "Functions are shared across targets, but not every target uses all of them."
+        )]
         pub fn $name(c: &mut Criterion) {
             bench_at_sizes(
                 c,
@@ -51,6 +55,10 @@ macro_rules! phastft_c2c {
 }
 macro_rules! phastft_r2c {
     ($name:ident, $float:ty, $planner:ty, $fft_fn:ident, $group:expr) => {
+        #[allow(
+            dead_code,
+            reason = "Functions are shared across targets, but not every target uses all of them."
+        )]
         pub fn $name(c: &mut Criterion) {
             bench_at_sizes(c, $group, LENGTHS, throughput_real::<$float>, |g, len| {
                 // Plan + output buffers allocated outside iter_batched —
@@ -82,6 +90,10 @@ macro_rules! phastft_r2c {
 
 macro_rules! phastft_c2r {
     ($name:ident, $float:ty, $planner:ty, $fft_fn:ident, $group:expr) => {
+        #[allow(
+            dead_code,
+            reason = "Functions are shared across targets, but not every target uses all of them."
+        )]
         pub fn $name(c: &mut Criterion) {
             bench_at_sizes(c, $group, LENGTHS, throughput_real::<$float>, |g, len| {
                 let phast_planner = <$planner>::new(len);

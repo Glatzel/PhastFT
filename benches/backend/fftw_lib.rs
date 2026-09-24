@@ -22,7 +22,7 @@ use fftw::types::{Flag, R2RKind, Sign};
 use utilities::rustfft::num_complex::Complex;
 
 use crate::common::{
-    bench_at_sizes, groups, real_signal, split_complex, throughput_complex, throughput_real,
+    bench_at_sizes, groups, ids, real_signal, split_complex, throughput_complex, throughput_real,
     LENGTHS,
 };
 
@@ -280,7 +280,7 @@ fftw_sweep_r2r!(
 /// Run all two c2c_forward groups (f32/f64) with the given
 /// FFTW `flags` and series `id`. The three per-mode bench binaries each
 /// call this once with their own `Flag` set.
-pub fn run_c2c_forward(c: &mut Criterion, id: &str, flags: Flag) {
+fn run_c2c_forward(c: &mut Criterion, id: &str, flags: Flag) {
     // `Flag` isn't `Copy`, so reconstruct from its u32 bits for each call.
     let bits = flags.bits();
     let mk = || Flag::from_bits_retain(bits);
@@ -291,7 +291,7 @@ pub fn run_c2c_forward(c: &mut Criterion, id: &str, flags: Flag) {
 /// Run all two c2c_inverse groups (f32/f64) with the given
 /// FFTW `flags` and series `id`. The three per-mode bench binaries each
 /// call this once with their own `Flag` set.
-pub fn run_c2c_inverse(c: &mut Criterion, id: &str, flags: Flag) {
+fn run_c2c_inverse(c: &mut Criterion, id: &str, flags: Flag) {
     // `Flag` isn't `Copy`, so reconstruct from its u32 bits for each call.
     let bits = flags.bits();
     let mk = || Flag::from_bits_retain(bits);
@@ -313,7 +313,7 @@ pub fn run_r2c(c: &mut Criterion, id: &str, flags: Flag) {
 /// Run all four c2r groups (f32/f64) with the given
 /// FFTW `flags` and series `id`. The three per-mode bench binaries each
 /// call this once with their own `Flag` set.
-pub fn run_c2r(c: &mut Criterion, id: &str, flags: Flag) {
+fn run_c2r(c: &mut Criterion, id: &str, flags: Flag) {
     // `Flag` isn't `Copy`, so reconstruct from its u32 bits for each call.
     let bits = flags.bits();
     let mk = || Flag::from_bits_retain(bits);
@@ -324,7 +324,7 @@ pub fn run_c2r(c: &mut Criterion, id: &str, flags: Flag) {
 /// Run all four r2hc groups (f32/f64) with the given
 /// FFTW `flags` and series `id`. The three per-mode bench binaries each
 /// call this once with their own `Flag` set.
-pub fn run_r2hc(c: &mut Criterion, id: &str, flags: Flag) {
+fn run_r2hc(c: &mut Criterion, id: &str, flags: Flag) {
     // `Flag` isn't `Copy`, so reconstruct from its u32 bits for each call.
     let bits = flags.bits();
     let mk = || Flag::from_bits_retain(bits);
@@ -335,10 +335,104 @@ pub fn run_r2hc(c: &mut Criterion, id: &str, flags: Flag) {
 /// Run all four hc2r groups (f32/f64) with the given
 /// FFTW `flags` and series `id`. The three per-mode bench binaries each
 /// call this once with their own `Flag` set.
-pub fn run_hc2r(c: &mut Criterion, id: &str, flags: Flag) {
+fn run_hc2r(c: &mut Criterion, id: &str, flags: Flag) {
     // `Flag` isn't `Copy`, so reconstruct from its u32 bits for each call.
     let bits = flags.bits();
     let mk = || Flag::from_bits_retain(bits);
     hc2r_f32(c, id, mk());
     hc2r_f64(c, id, mk());
+}
+
+pub fn fftw_c2c_fwd(c: &mut Criterion) {
+    run_c2c_forward(
+        c,
+        ids::FFTW_CONSERVE_C2C,
+        Flag::DESTROYINPUT | Flag::MEASURE | Flag::CONSERVEMEMORY,
+    );
+    run_c2c_forward(
+        c,
+        ids::FFTW_ESTIMATE_C2C,
+        Flag::DESTROYINPUT | Flag::ESTIMATE,
+    );
+    run_c2c_forward(c, ids::FFTW_MEASURE_C2C, Flag::DESTROYINPUT | Flag::MEASURE);
+}
+
+pub fn fftw_c2c_inv(c: &mut Criterion) {
+    run_c2c_inverse(
+        c,
+        ids::FFTW_CONSERVE_C2C,
+        Flag::DESTROYINPUT | Flag::MEASURE | Flag::CONSERVEMEMORY,
+    );
+    run_c2c_inverse(
+        c,
+        ids::FFTW_ESTIMATE_C2C,
+        Flag::DESTROYINPUT | Flag::ESTIMATE,
+    );
+    run_c2c_inverse(c, ids::FFTW_MEASURE_C2C, Flag::DESTROYINPUT | Flag::MEASURE);
+}
+
+pub fn fftw_c2r(c: &mut Criterion) {
+    run_c2r(
+        c,
+        ids::FFTW_CONSERVE_C2R,
+        Flag::DESTROYINPUT | Flag::MEASURE | Flag::CONSERVEMEMORY,
+    );
+    run_c2r(
+        c,
+        ids::FFTW_CONSERVE_C2R,
+        Flag::DESTROYINPUT | Flag::ESTIMATE,
+    );
+    run_c2r(
+        c,
+        ids::FFTW_CONSERVE_C2R,
+        Flag::DESTROYINPUT | Flag::MEASURE,
+    );
+    run_hc2r(
+        c,
+        ids::FFTW_CONSERVE_R2R,
+        Flag::DESTROYINPUT | Flag::MEASURE | Flag::CONSERVEMEMORY,
+    );
+    run_hc2r(
+        c,
+        ids::FFTW_CONSERVE_R2R,
+        Flag::DESTROYINPUT | Flag::ESTIMATE,
+    );
+    run_hc2r(
+        c,
+        ids::FFTW_CONSERVE_R2R,
+        Flag::DESTROYINPUT | Flag::MEASURE,
+    );
+}
+
+pub fn fftw_r2c(c: &mut Criterion) {
+    run_r2c(
+        c,
+        ids::FFTW_CONSERVE_R2C,
+        Flag::DESTROYINPUT | Flag::MEASURE | Flag::CONSERVEMEMORY,
+    );
+    run_r2c(
+        c,
+        ids::FFTW_CONSERVE_R2C,
+        Flag::DESTROYINPUT | Flag::ESTIMATE,
+    );
+    run_r2c(
+        c,
+        ids::FFTW_CONSERVE_R2C,
+        Flag::DESTROYINPUT | Flag::MEASURE | Flag::CONSERVEMEMORY,
+    );
+    run_r2hc(
+        c,
+        ids::FFTW_CONSERVE_R2R,
+        Flag::DESTROYINPUT | Flag::MEASURE | Flag::CONSERVEMEMORY,
+    );
+    run_r2hc(
+        c,
+        ids::FFTW_CONSERVE_R2R,
+        Flag::DESTROYINPUT | Flag::ESTIMATE,
+    );
+    run_r2hc(
+        c,
+        ids::FFTW_CONSERVE_R2R,
+        Flag::DESTROYINPUT | Flag::MEASURE,
+    );
 }

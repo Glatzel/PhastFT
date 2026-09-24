@@ -18,6 +18,10 @@ use crate::common::{
 
 macro_rules! rustfft_c2c {
     ($name:ident, $float:ty, $plan_method:ident, $group:expr) => {
+        #[allow(
+            dead_code,
+            reason = "Functions are shared across targets, but not every target uses all of them."
+        )]
         pub fn $name(c: &mut Criterion) {
             bench_at_sizes(
                 c,

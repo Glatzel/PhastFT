@@ -15,32 +15,14 @@
 //! also designed for low memory overhead — plain PATIENT / MEASURE let
 //! FFTW spend memory freely in pursuit of speed.
 
-use criterion::{criterion_group, criterion_main, Criterion};
-use fftw::types::Flag;
+use criterion::{criterion_group, criterion_main};
 
+use crate::backend::fftw_lib::fftw_c2c_fwd;
 use crate::backend::phastft_lib::{phastft_c2c_fwd_f32, phastft_c2c_fwd_f64};
 use crate::backend::rustfft_lib::{rustfft_fwd_f32, rustfft_fwd_f64};
 
 mod backend;
 mod common;
-
-fn fftw_fwd(c: &mut Criterion) {
-    backend::fftw_lib::run_c2c_forward(
-        c,
-        common::ids::FFTW_CONSERVE_C2C,
-        Flag::DESTROYINPUT | Flag::MEASURE | Flag::CONSERVEMEMORY,
-    );
-    backend::fftw_lib::run_c2c_forward(
-        c,
-        common::ids::FFTW_ESTIMATE_C2C,
-        Flag::DESTROYINPUT | Flag::ESTIMATE,
-    );
-    backend::fftw_lib::run_c2c_forward(
-        c,
-        common::ids::FFTW_MEASURE_C2C,
-        Flag::DESTROYINPUT | Flag::MEASURE,
-    );
-}
 
 criterion_group!(
     benches,
@@ -48,6 +30,6 @@ criterion_group!(
     phastft_c2c_fwd_f64,
     rustfft_fwd_f32,
     rustfft_fwd_f64,
-    fftw_fwd
+    fftw_c2c_fwd
 );
 criterion_main!(benches);

@@ -13,8 +13,7 @@ use criterion::{BatchSize, BenchmarkId, Criterion};
 use realfft::RealFftPlanner;
 
 use crate::common::{
-    bench_at_sizes, groups, ids, real_signal, spectrum_interleaved, spectrum_split,
-    throughput_real, LENGTHS,
+    bench_at_sizes, groups, ids, real_signal, spectrum_interleaved, throughput_real, LENGTHS,
 };
 //
 // Group names (snake_case): r2c_f32 / r2c_f64 / c2r_f32 / c2r_f64 — distinct
@@ -22,6 +21,10 @@ use crate::common::{
 
 macro_rules! realfft_r2c {
     ($name:ident, $float:ty, $planner:ty, $fft_fn:ident, $group:expr) => {
+        #[allow(
+            dead_code,
+            reason = "Functions are shared across targets, but not every target uses all of them."
+        )]
         pub fn $name(c: &mut Criterion) {
             bench_at_sizes(c, $group, LENGTHS, throughput_real::<$float>, |g, len| {
                 let mut rf_planner = RealFftPlanner::<$float>::new();
@@ -47,6 +50,10 @@ macro_rules! realfft_r2c {
 
 macro_rules! realfft_c2r {
     ($name:ident, $float:ty, $planner:ty, $fft_fn:ident, $group:expr) => {
+        #[allow(
+            dead_code,
+            reason = "Functions are shared across targets, but not every target uses all of them."
+        )]
         pub fn $name(c: &mut Criterion) {
             bench_at_sizes(c, $group, LENGTHS, throughput_real::<$float>, |g, len| {
                 let mut rf_planner = RealFftPlanner::<$float>::new();

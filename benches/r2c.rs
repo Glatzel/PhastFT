@@ -15,47 +15,14 @@
 //! also designed for low memory overhead — plain PATIENT / MEASURE let
 //! FFTW spend memory freely in pursuit of speed.
 
-use criterion::{criterion_group, criterion_main, Criterion};
-use fftw::types::Flag;
+use criterion::{criterion_group, criterion_main};
 
+use crate::backend::fftw_lib::fftw_r2c;
 use crate::backend::phastft_lib::{phastft_r2c_f32, phastft_r2c_f64};
 use crate::backend::realfft_lib::{realfft_r2c_f32, realfft_r2c_f64};
 
 mod backend;
 mod common;
-
-fn fftw_r2c(c: &mut Criterion) {
-    backend::fftw_lib::run_r2c(
-        c,
-        common::ids::FFTW_CONSERVE_R2C,
-        Flag::DESTROYINPUT | Flag::MEASURE | Flag::CONSERVEMEMORY,
-    );
-    backend::fftw_lib::run_r2c(
-        c,
-        common::ids::FFTW_CONSERVE_R2C,
-        Flag::DESTROYINPUT | Flag::ESTIMATE,
-    );
-    backend::fftw_lib::run_r2c(
-        c,
-        common::ids::FFTW_CONSERVE_R2C,
-        Flag::DESTROYINPUT | Flag::MEASURE | Flag::CONSERVEMEMORY,
-    );
-    backend::fftw_lib::run_r2hc(
-        c,
-        common::ids::FFTW_CONSERVE_R2R,
-        Flag::DESTROYINPUT | Flag::MEASURE | Flag::CONSERVEMEMORY,
-    );
-    backend::fftw_lib::run_r2hc(
-        c,
-        common::ids::FFTW_CONSERVE_R2R,
-        Flag::DESTROYINPUT | Flag::ESTIMATE,
-    );
-    backend::fftw_lib::run_r2hc(
-        c,
-        common::ids::FFTW_CONSERVE_R2R,
-        Flag::DESTROYINPUT | Flag::MEASURE,
-    );
-}
 
 criterion_group!(
     benches,
