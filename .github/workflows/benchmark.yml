@@ -31,9 +31,6 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Install the latest version of uv
-        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
-
       - name: Benchmark
         run: |
             cargo bench --bench ${{ matrix.target }} \
@@ -41,16 +38,42 @@ jobs:
             --no-default-features \
             --features="bench-internals,complex-nums,${{ inputs.parallel && 'parallel' || null }}"
 
-      - name: Plot
-        run: |
-          uv run benches/plot_criterion_overlay.py \
-            --out-dir target/overlays
-
       - name: Upload benchmark
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: benchmark-${{ matrix.target }}
           path: |
               target/criterion
-              target/overlays
+          if-no-files-found: error
+          
+  plot:
+    needs: benchmark
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: ${{ inputs.repository }}
+          ref: ${{ inputs.ref }}
+
+      - name: Download benchmark artifacts
+        uses: actions/download-artifact@v8
+        with:
+          pattern: benchmark-*
+          path: target/criterion
+          merge-multiple: true
+
+      - name: Install the latest version of uv
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+
+      - name: Plot
+        run: |
+          uv run benches/plot_criterion_overlay.py \
+            --out-dir target/overlays
+
+      - name: Upload overlays
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: plot-overlays
+          path: target/overlays
           if-no-files-found: error
