@@ -9,7 +9,7 @@
 //! between planning modes; realfft has no such cache, so a single binary
 //! suffices and gives a self-contained PhastFT-vs-realfft comparison.
 
-use criterion::{criterion_group, criterion_main, BatchSize, BenchmarkId, Criterion};
+use criterion::{BatchSize, BenchmarkId, Criterion};
 use realfft::RealFftPlanner;
 
 use crate::common::{
