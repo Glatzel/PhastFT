@@ -425,7 +425,12 @@ def plot_group(
     active = sum(1 for s in series_names if any(sz in group_data[s] for sz in sizes))
     max_bars = 50
     max_sizes = max(1, max_bars // active)
-    halves = [sizes[i : i + max_sizes] for i in range(0, len(sizes), max_sizes)]
+    n_plots = math.ceil(len(sizes) / max_sizes)
+    chunk_size = math.ceil(len(sizes) / n_plots)
+    halves = [
+        sizes[i:i + chunk_size]
+        for i in range(0, len(sizes), chunk_size)
+    ]
 
     for half in halves:
         if not half:
