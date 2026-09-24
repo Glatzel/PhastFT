@@ -131,8 +131,7 @@ macro_rules! sweep_c2c {
                     let setup = || {
                         let (reals, imags) = split_complex::<$float>(len);
                         let mut nums: AlignedVec<Complex<$float>> = AlignedVec::new(len);
-                        for (z, (&re, &im)) in nums.iter_mut().zip(reals.iter().zip(imags.iter()))
-                        {
+                        for (z, (&re, &im)) in nums.iter_mut().zip(reals.iter().zip(imags.iter())) {
                             *z = Complex::new(re, im);
                         }
                         nums
@@ -191,8 +190,7 @@ macro_rules! sweep_c2r {
                         // Complex half-spectrum in (`len / 2 + 1`), real out (`len`).
                         let (reals, imags) = split_complex::<$float>(len / 2 + 1);
                         let mut input: AlignedVec<Complex<$float>> = AlignedVec::new(len / 2 + 1);
-                        for (z, (&re, &im)) in
-                            input.iter_mut().zip(reals.iter().zip(imags.iter()))
+                        for (z, (&re, &im)) in input.iter_mut().zip(reals.iter().zip(imags.iter()))
                         {
                             *z = Complex::new(re, im);
                         }
@@ -237,20 +235,68 @@ macro_rules! sweep_r2r {
     };
 }
 
-sweep_c2c!(c2c_fwd_f32, f32, C2CPlan32, Sign::Forward, groups::C2C_FORWARD_F32);
-sweep_c2c!(c2c_inv_f32, f32, C2CPlan32, Sign::Backward, groups::C2C_INVERSE_F32);
-sweep_c2c!(c2c_fwd_f64, f64, C2CPlan64, Sign::Forward, groups::C2C_FORWARD_F64);
-sweep_c2c!(c2c_inv_f64, f64, C2CPlan64, Sign::Backward, groups::C2C_INVERSE_F64);
+sweep_c2c!(
+    c2c_fwd_f32,
+    f32,
+    C2CPlan32,
+    Sign::Forward,
+    groups::C2C_FORWARD_F32
+);
+sweep_c2c!(
+    c2c_inv_f32,
+    f32,
+    C2CPlan32,
+    Sign::Backward,
+    groups::C2C_INVERSE_F32
+);
+sweep_c2c!(
+    c2c_fwd_f64,
+    f64,
+    C2CPlan64,
+    Sign::Forward,
+    groups::C2C_FORWARD_F64
+);
+sweep_c2c!(
+    c2c_inv_f64,
+    f64,
+    C2CPlan64,
+    Sign::Backward,
+    groups::C2C_INVERSE_F64
+);
 
 sweep_r2c!(r2c_f32, f32, R2CPlan32, groups::R2C_F32);
 sweep_r2c!(r2c_f64, f64, R2CPlan64, groups::R2C_F64);
 sweep_c2r!(c2r_f32, f32, C2RPlan32, groups::C2R_F32);
 sweep_c2r!(c2r_f64, f64, C2RPlan64, groups::C2R_F64);
 
-sweep_r2r!(r2hc_f32, f32, R2RPlan32, groups::R2C_F32, R2RKind::FFTW_R2HC);
-sweep_r2r!(r2hc_f64, f64, R2RPlan64, groups::R2C_F64, R2RKind::FFTW_R2HC);
-sweep_r2r!(hc2r_f32, f32, R2RPlan32, groups::C2R_F32, R2RKind::FFTW_HC2R);
-sweep_r2r!(hc2r_f64, f64, R2RPlan64, groups::C2R_F64, R2RKind::FFTW_HC2R);
+sweep_r2r!(
+    r2hc_f32,
+    f32,
+    R2RPlan32,
+    groups::R2C_F32,
+    R2RKind::FFTW_R2HC
+);
+sweep_r2r!(
+    r2hc_f64,
+    f64,
+    R2RPlan64,
+    groups::R2C_F64,
+    R2RKind::FFTW_R2HC
+);
+sweep_r2r!(
+    hc2r_f32,
+    f32,
+    R2RPlan32,
+    groups::C2R_F32,
+    R2RKind::FFTW_HC2R
+);
+sweep_r2r!(
+    hc2r_f64,
+    f64,
+    R2RPlan64,
+    groups::C2R_F64,
+    R2RKind::FFTW_HC2R
+);
 
 pub fn fftw_c2c_fwd_all(c: &mut Criterion) {
     per_mode(|m| {
