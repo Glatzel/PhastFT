@@ -1,19 +1,21 @@
-//! Important: this benchmark only measures small-to-mid sizes; criterion is
-//! not a good fit for measuring long-running tasks — see
-//! `examples/benchmark.rs` for the harness for large sizes.
+//! Important: this benchmark only measures small-to-mid sizes, which are
+//! not the focus of PhastFT. Criterion is not a good fit for measuring
+//! long-running tasks — see `examples/benchmark.rs` for the harness for
+//! large sizes.
 //!
-//! Each FFTW planning mode (Estimate / Measure / Conserve) lives in its own
-//! `[[bench]]` binary so FFTW's global per-process wisdom cache cannot leak
-//! between modes; each run starts with a fresh process and empty wisdom.
-//! Group names are shared with `bench.rs` / `rustfft.rs` / the other
-//! `fftw_*_c2c.rs` binaries; criterion does NOT auto-aggregate across binaries
-//! — use `benches/plot_criterion_overlay.py` for the cross-binary overlay.
+//! This benchmark compares inverse C2C FFT execution across PhastFT,
+//! RustFFT, and FFTW for `f32` and `f64` where supported.
 //!
-//! This series combines MEASURE with `FFTW_CONSERVE_MEMORY` so FFTW selects
-//! memory-efficient plan variants during the same search it would run for
-//! plain MEASURE. This is a more faithful comparison for PhastFT, which is
-//! also designed for low memory overhead — plain PATIENT / MEASURE let
-//! FFTW spend memory freely in pursuit of speed.
+//! FFTW is benchmarked with `ESTIMATE`, `MEASURE`, and `CONSERVE_MEMORY`
+//! planning modes. FFTW wisdom is explicitly cleared between each mode so
+//! that the planning modes remain isolated and do not reuse wisdom generated
+//! by a previous benchmark.
+//!
+//! The PhastFT, RustFFT, and FFTW bench binaries all write into the same
+//! `target/criterion/<group>/<id>/<size>/` tree; criterion does NOT
+//! auto-aggregate across binaries, so use
+//! `benches/plot_criterion_overlay.py` to produce a single overlay plot per
+//! group after running them all.
 
 use criterion::{criterion_group, criterion_main};
 

@@ -1,11 +1,9 @@
-//! Important: this benchmark only measures small-to-mid sizes; criterion is
-//! not a good fit for measuring long-running tasks — see
-//! `examples/benchmark.rs` for the harness for large sizes.
+//! Shared RustFFT benchmark logic for C2C transforms.
 //!
-//! The RustFFT series lives in its own `[[bench]]` binary so it can be
-//! re-run independently. Group names are shared with `bench.rs` /
-//! `fftw_*.rs`; criterion does NOT auto-aggregate across binaries — use
-//! `benches/plot_criterion_overlay.py` for the cross-binary overlay.
+//! The benchmark functions cover forward and inverse C2C transforms for
+//! `f32` and `f64`.
+//!
+//! RustFFT uses an interleaved complex representation for C2C transforms.
 
 use criterion::{BatchSize, BenchmarkId, Criterion};
 use num_traits::Zero;
@@ -18,10 +16,6 @@ use crate::common::{
 
 macro_rules! rustfft_c2c {
     ($name:ident, $float:ty, $plan_method:ident, $group:expr) => {
-        #[allow(
-            dead_code,
-            reason = "Functions are shared across targets, but not every target uses all of them."
-        )]
         pub fn $name(c: &mut Criterion) {
             bench_at_sizes(
                 c,

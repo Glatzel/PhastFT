@@ -1,13 +1,11 @@
-//! Important: this benchmark only measures small-to-mid sizes, which are
-//! not the focus of PhastFT. Criterion is not a good fit for measuring
-//! long-running tasks — see `examples/benchmark.rs` for the harness for
-//! large sizes.
+//! Shared PhastFT benchmark logic for C2C, R2C, and C2R transforms.
 //!
-//! The PhastFT, RustFFT, and FFTW bench binaries all write into the same
-//! `target/criterion/<group>/<id>/<size>/` tree; criterion does NOT
-//! auto-aggregate across binaries, so use
-//! `benches/plot_criterion_overlay.py` to produce a single overlay plot per
-//! group after running them all.
+//! The benchmark functions cover forward and inverse C2C transforms and
+//! forward R2C and inverse C2R transforms for `f32` and `f64`.
+//!
+//! C2C benchmarks use PhastFT's DIT planner with separate real and imaginary
+//! arrays. R2C and C2R benchmarks use PhastFT's native split-complex
+//! representation with separate real and imaginary buffers.
 
 use criterion::{BatchSize, BenchmarkId, Criterion};
 use phastft::options::Options;
@@ -25,10 +23,6 @@ use crate::common::{
 
 macro_rules! phastft_c2c {
     ($name:ident, $float:ty, $planner:ty, $fft:ident, $dir:expr, $group:expr) => {
-        #[allow(
-            dead_code,
-            reason = "Functions are shared across targets, but not every target uses all of them."
-        )]
         pub fn $name(c: &mut Criterion) {
             bench_at_sizes(
                 c,
@@ -55,10 +49,6 @@ macro_rules! phastft_c2c {
 }
 macro_rules! phastft_r2c {
     ($name:ident, $float:ty, $planner:ty, $fft_fn:ident, $group:expr) => {
-        #[allow(
-            dead_code,
-            reason = "Functions are shared across targets, but not every target uses all of them."
-        )]
         pub fn $name(c: &mut Criterion) {
             bench_at_sizes(c, $group, LENGTHS, throughput_real::<$float>, |g, len| {
                 // Plan + output buffers allocated outside iter_batched —
@@ -90,10 +80,6 @@ macro_rules! phastft_r2c {
 
 macro_rules! phastft_c2r {
     ($name:ident, $float:ty, $planner:ty, $fft_fn:ident, $group:expr) => {
-        #[allow(
-            dead_code,
-            reason = "Functions are shared across targets, but not every target uses all of them."
-        )]
         pub fn $name(c: &mut Criterion) {
             bench_at_sizes(c, $group, LENGTHS, throughput_real::<$float>, |g, len| {
                 let phast_planner = <$planner>::new(len);

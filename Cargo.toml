@@ -38,6 +38,7 @@ bench-internals = ["complex-nums"]
 [dev-dependencies]
 criterion = "0.8.2"
 fftw = "0.8.0"
+fftw-sys="0.8.0"
 rand = "0.10.1"
 realfft = "3.5.0"
 utilities = { path = "utilities" }

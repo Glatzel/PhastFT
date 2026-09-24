@@ -139,9 +139,8 @@ group / ID constants all live in `benches/common/mod.rs` so renames
 touch one file. `bench_at_sizes` takes the throughput function as an
 argument, so each bench file picks its data layout (split vs.
 interleaved) independently of the throughput accounting (paired vs.
-single scalar). The shared FFTW C2C bench body lives in
-`benches/fftw_lib/mod.rs` and is consumed by all three FFTW bench
-binaries.
+single scalar). The shared bench body lives in
+`benches/backend/{crate_name}_lib/mod.rs` .
 
 ## 2. Shell-driven cross-library pipeline
 

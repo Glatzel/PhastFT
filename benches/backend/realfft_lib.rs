@@ -1,13 +1,10 @@
-//! Important: this benchmark only measures small-to-mid sizes; criterion is
-//! not a good fit for measuring long-running tasks — see
-//! `examples/benchmark.rs` for the harness for large sizes.
+//! Shared realfft benchmark logic for R2C and C2R transforms.
 //!
-//! Unlike the C2C cross-library comparison (split across `bench.rs` vs.
-//! `rustfft.rs` vs. `fftw_*.rs`), both PhastFT R2C/C2R and the realfft
-//! baseline live in this single bench binary. The split-per-library
-//! convention exists primarily to isolate FFTW's per-process wisdom cache
-//! between planning modes; realfft has no such cache, so a single binary
-//! suffices and gives a self-contained PhastFT-vs-realfft comparison.
+//! The benchmark functions cover forward R2C and inverse C2R transforms for
+//! `f32` and `f64`.
+//!
+//! realfft uses an interleaved complex spectrum for R2C/C2R transforms,
+//! providing a real-FFT interface backed by RustFFT.
 
 use criterion::{BatchSize, BenchmarkId, Criterion};
 use realfft::RealFftPlanner;
@@ -15,16 +12,9 @@ use realfft::RealFftPlanner;
 use crate::common::{
     bench_at_sizes, groups, ids, real_signal, spectrum_interleaved, throughput_real, LENGTHS,
 };
-//
-// Group names (snake_case): r2c_f32 / r2c_f64 / c2r_f32 / c2r_f64 — distinct
-// from the C2C groups, so no overlay aggregation across binaries needed.
 
 macro_rules! realfft_r2c {
     ($name:ident, $float:ty, $planner:ty, $fft_fn:ident, $group:expr) => {
-        #[allow(
-            dead_code,
-            reason = "Functions are shared across targets, but not every target uses all of them."
-        )]
         pub fn $name(c: &mut Criterion) {
             bench_at_sizes(c, $group, LENGTHS, throughput_real::<$float>, |g, len| {
                 let mut rf_planner = RealFftPlanner::<$float>::new();
@@ -50,10 +40,6 @@ macro_rules! realfft_r2c {
 
 macro_rules! realfft_c2r {
     ($name:ident, $float:ty, $planner:ty, $fft_fn:ident, $group:expr) => {
-        #[allow(
-            dead_code,
-            reason = "Functions are shared across targets, but not every target uses all of them."
-        )]
         pub fn $name(c: &mut Criterion) {
             bench_at_sizes(c, $group, LENGTHS, throughput_real::<$float>, |g, len| {
                 let mut rf_planner = RealFftPlanner::<$float>::new();
