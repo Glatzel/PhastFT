@@ -381,7 +381,7 @@ def plot_group_item(
 
     plt.setp(ax.get_xticklabels(), rotation=0, ha="center")
 
-    # Swap legend order when ncol > 5
+    # Each line up to 5 legends and swap legend order if multilines.
     handles, labels = ax.get_legend_handles_labels()
     ncol = min(len(labels), 5)
     order = [i for col in range(ncol) for i in range(col, len(labels), ncol)]
