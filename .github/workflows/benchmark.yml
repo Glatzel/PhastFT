@@ -16,11 +16,6 @@ jobs:
   benchmark:
     strategy:
       matrix:
-        runner:
-          - ubuntu-latest
-          - ubuntu-26.04-arm
-          - windows-latest
-          - macos-latest
         target:
           - c2c_forward
           - c2c_inverse
@@ -30,7 +25,7 @@ jobs:
           - interleave
           - bit_reversal
       fail-fast: true
-    runs-on: ${{ matrix.runner }}
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
@@ -44,7 +39,7 @@ jobs:
       - name: Upload benchmark
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: benchmark-${{ matrix.runner }}-${{ matrix.target }}
+          name: benchmark-${{ matrix.target }}
           path: |
               target/criterion
           if-no-files-found: error
@@ -52,14 +47,6 @@ jobs:
   plot:
     needs: benchmark
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        runner:
-          - ubuntu-latest
-          - ubuntu-26.04-arm
-          - windows-latest
-          - macos-latest
-      fail-fast: true
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -69,7 +56,7 @@ jobs:
       - name: Download benchmark artifacts
         uses: actions/download-artifact@v8
         with:
-          pattern: benchmark-${{ matrix.runner }}-*
+          pattern: benchmark-*
           path: target/criterion
           merge-multiple: true
 
@@ -84,6 +71,6 @@ jobs:
       - name: Upload overlays
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: plot-overlays-${{ matrix.runner }}
+          name: plot-overlays
           path: target/overlays
           if-no-files-found: error
