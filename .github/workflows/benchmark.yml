@@ -36,7 +36,7 @@ jobs:
 
       - name: Benchmark
         run: |
-            cargo bench ${{ matrix.target }} \
+            cargo bench --bench ${{ matrix.target }} \
             --profile bench \
             --no-default-features \
             --features="bench-internals,complex-nums,${{ inputs.parallel && 'parallel' || null }}"
