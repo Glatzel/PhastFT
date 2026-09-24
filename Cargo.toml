@@ -43,11 +43,19 @@ realfft = "3.5.0"
 utilities = { path = "utilities" }
 
 [[bench]]
-name = "bench"
+name = "c2c_forward"
 harness = false
 
 [[bench]]
-name = "rustfft"
+name = "c2c_inverse"
+harness = false
+
+[[bench]]
+name = "r2c"
+harness = false
+
+[[bench]]
+name = "c2r"
 harness = false
 
 [[bench]]
@@ -63,46 +71,6 @@ required-features = ["bench-internals", "complex-nums"]
 name = "bit_reversal"
 harness = false
 required-features = ["bench-internals"]
-
-[[bench]]
-name = "fftw_conserve_c2c"
-harness = false
-
-[[bench]]
-name = "fftw_conserve_r2c_c2r"
-harness = false
-
-[[bench]]
-name = "fftw_conserve_r2r"
-harness = false
-
-[[bench]]
-name = "fftw_estimate_c2c"
-harness = false
-
-[[bench]]
-name = "fftw_estimate_r2c_c2r"
-harness = false
-
-[[bench]]
-name = "fftw_estimate_r2r"
-harness = false
-
-[[bench]]
-name = "fftw_measure_c2c"
-harness = false
-
-[[bench]]
-name = "fftw_measure_r2c_c2r"
-harness = false
-
-[[bench]]
-name = "fftw_measure_r2r"
-harness = false
-
-[[bench]]
-name = "realfft"
-harness = false
 
 [profile.profiling]
 inherits = "release"

@@ -277,42 +277,68 @@ fftw_sweep_r2r!(
     R2RKind::FFTW_HC2R
 );
 
-/// Run all four c2c_* groups (forward/inverse × f32/f64) with the given
+/// Run all two c2c_forward groups (f32/f64) with the given
 /// FFTW `flags` and series `id`. The three per-mode bench binaries each
 /// call this once with their own `Flag` set.
-pub fn run_c2c(c: &mut Criterion, id: &str, flags: Flag) {
+pub fn run_c2c_forward(c: &mut Criterion, id: &str, flags: Flag) {
     // `Flag` isn't `Copy`, so reconstruct from its u32 bits for each call.
     let bits = flags.bits();
     let mk = || Flag::from_bits_retain(bits);
-
     c2c_fwd_f32(c, id, mk());
-    c2c_inv_f32(c, id, mk());
     c2c_fwd_f64(c, id, mk());
+}
+
+/// Run all two c2c_inverse groups (f32/f64) with the given
+/// FFTW `flags` and series `id`. The three per-mode bench binaries each
+/// call this once with their own `Flag` set.
+pub fn run_c2c_inverse(c: &mut Criterion, id: &str, flags: Flag) {
+    // `Flag` isn't `Copy`, so reconstruct from its u32 bits for each call.
+    let bits = flags.bits();
+    let mk = || Flag::from_bits_retain(bits);
+    c2c_inv_f32(c, id, mk());
     c2c_inv_f64(c, id, mk());
 }
 
-/// Run all four r2c/c2r groups (r2c/c2r × f32/f64) with the given
+/// Run all four r2c groups (f32/f64) with the given
 /// FFTW `flags` and series `id`. The three per-mode bench binaries each
 /// call this once with their own `Flag` set.
-pub fn run_r2c_c2r(c: &mut Criterion, id_r2c: &str, id_c2r: &str, flags: Flag) {
+pub fn run_r2c(c: &mut Criterion, id: &str, flags: Flag) {
     // `Flag` isn't `Copy`, so reconstruct from its u32 bits for each call.
     let bits = flags.bits();
     let mk = || Flag::from_bits_retain(bits);
-    r2c_f32(c, id_r2c, mk());
-    r2c_f64(c, id_r2c, mk());
-    c2r_f32(c, id_c2r, mk());
-    c2r_f64(c, id_c2r, mk());
+    r2c_f32(c, id, mk());
+    r2c_f64(c, id, mk());
 }
 
-/// Run all four rr groups (r2r × f32/f64) with the given
+/// Run all four c2r groups (f32/f64) with the given
 /// FFTW `flags` and series `id`. The three per-mode bench binaries each
 /// call this once with their own `Flag` set.
-pub fn run_r2r(c: &mut Criterion, id: &str, flags: Flag) {
+pub fn run_c2r(c: &mut Criterion, id: &str, flags: Flag) {
+    // `Flag` isn't `Copy`, so reconstruct from its u32 bits for each call.
+    let bits = flags.bits();
+    let mk = || Flag::from_bits_retain(bits);
+    c2r_f32(c, id, mk());
+    c2r_f64(c, id, mk());
+}
+
+/// Run all four r2hc groups (f32/f64) with the given
+/// FFTW `flags` and series `id`. The three per-mode bench binaries each
+/// call this once with their own `Flag` set.
+pub fn run_r2hc(c: &mut Criterion, id: &str, flags: Flag) {
     // `Flag` isn't `Copy`, so reconstruct from its u32 bits for each call.
     let bits = flags.bits();
     let mk = || Flag::from_bits_retain(bits);
     r2hc_f32(c, id, mk());
     r2hc_f64(c, id, mk());
+}
+
+/// Run all four hc2r groups (f32/f64) with the given
+/// FFTW `flags` and series `id`. The three per-mode bench binaries each
+/// call this once with their own `Flag` set.
+pub fn run_hc2r(c: &mut Criterion, id: &str, flags: Flag) {
+    // `Flag` isn't `Copy`, so reconstruct from its u32 bits for each call.
+    let bits = flags.bits();
+    let mk = || Flag::from_bits_retain(bits);
     hc2r_f32(c, id, mk());
     hc2r_f64(c, id, mk());
 }

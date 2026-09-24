@@ -2,6 +2,11 @@ name: Benchmark
 
 on:
   workflow_dispatch:
+    inputs:
+      parallel:
+        default: true
+        type: boolean
+        description: Enable phastft parallel feature
 
 concurrency:
   group: ${{ github.workflow }}
@@ -13,14 +18,14 @@ jobs:
 
     strategy:
       matrix:
-        option:
-          # c2c
-          - --bench bench --bench rustfft --bench fftw_conserve_c2c --bench fftw_estimate_c2c --bench fftw_measure_c2c
-          # r2c/c2r
-          - --bench fftw_conserve_r2c_c2r --bench fftw_conserve_r2r --bench fftw_estimate_r2c_c2r --bench fftw_estimate_r2r --bench fftw_measure_r2c_c2r --bench fftw_measure_r2r --bench realfft
-          - --bench planner
-          - --bench interleave --all-features
-          - --bench bit_reversal --all-features
+        target:
+          - c2c_forward
+          - c2c_inverse
+          - r2c
+          - c2r
+          - planner
+          - interleave
+          - bit_reversal
       fail-fast: true
 
     steps:
@@ -30,40 +35,21 @@ jobs:
         uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
 
       - name: Benchmark
-        run: cargo bench ${{ matrix.option }}
-
-      - name: Upload benchmark
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: benchmark-${{ matrix.target }}
-          path: target/criterion
-          if-no-files-found: error
-
-  plot-overlay:
-    needs: benchmark
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-
-      - name: Download benchmark artifacts
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
-        with:
-          pattern: benchmark-*
-          path: target/criterion
-          merge-multiple: true
-
-      - name: Install the latest version of uv
-        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        run: |
+            cargo bench ${{ matrix.option }} \
+            --no-default-features \
+            --features="bench-internals,complex-nums,${{ inputs.parallel || 'parallel' && null }}"
 
       - name: Plot
         run: |
           uv run benches/plot_criterion_overlay.py \
             --out-dir target/overlays
 
-      - name: Upload overlays
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a0 # v7.0.1
+      - name: Upload benchmark
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: benchmark-overlays
-          path: target/overlays
+          name: benchmark-${{ matrix.target }}
+          path: |
+              target/criterion
+              target/overlays
           if-no-files-found: error

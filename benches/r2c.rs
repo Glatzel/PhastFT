@@ -18,17 +18,51 @@
 use criterion::{criterion_group, criterion_main, Criterion};
 use fftw::types::Flag;
 
-mod common;
-mod fftw_lib;
+use crate::backend::phastft_lib::{phastft_r2c_f32, phastft_r2c_f64};
+use crate::backend::realfft_lib::{realfft_r2c_f32, realfft_r2c_f64};
 
-fn run(c: &mut Criterion) {
-    fftw_lib::run_r2c_c2r(
+mod backend;
+mod common;
+
+fn fftw_r2c(c: &mut Criterion) {
+    backend::fftw_lib::run_r2c(
         c,
         common::ids::FFTW_CONSERVE_R2C,
-        common::ids::FFTW_CONSERVE_C2R,
         Flag::DESTROYINPUT | Flag::MEASURE | Flag::CONSERVEMEMORY,
+    );
+    backend::fftw_lib::run_r2c(
+        c,
+        common::ids::FFTW_CONSERVE_R2C,
+        Flag::DESTROYINPUT | Flag::ESTIMATE,
+    );
+    backend::fftw_lib::run_r2c(
+        c,
+        common::ids::FFTW_CONSERVE_R2C,
+        Flag::DESTROYINPUT | Flag::MEASURE | Flag::CONSERVEMEMORY,
+    );
+    backend::fftw_lib::run_r2hc(
+        c,
+        common::ids::FFTW_CONSERVE_R2R,
+        Flag::DESTROYINPUT | Flag::MEASURE | Flag::CONSERVEMEMORY,
+    );
+    backend::fftw_lib::run_r2hc(
+        c,
+        common::ids::FFTW_CONSERVE_R2R,
+        Flag::DESTROYINPUT | Flag::ESTIMATE,
+    );
+    backend::fftw_lib::run_r2hc(
+        c,
+        common::ids::FFTW_CONSERVE_R2R,
+        Flag::DESTROYINPUT | Flag::MEASURE,
     );
 }
 
-criterion_group!(benches, run);
+criterion_group!(
+    benches,
+    phastft_r2c_f32,
+    phastft_r2c_f64,
+    realfft_r2c_f32,
+    realfft_r2c_f64,
+    fftw_r2c
+);
 criterion_main!(benches);

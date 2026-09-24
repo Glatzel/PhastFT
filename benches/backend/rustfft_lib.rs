@@ -7,17 +7,18 @@
 //! `fftw_*.rs`; criterion does NOT auto-aggregate across binaries — use
 //! `benches/plot_criterion_overlay.py` for the cross-binary overlay.
 
-use criterion::{criterion_group, criterion_main, BatchSize, BenchmarkId, Criterion};
+use criterion::{BatchSize, BenchmarkId, Criterion};
 use num_traits::Zero;
 use utilities::rustfft::num_complex::Complex;
 use utilities::rustfft::FftPlanner;
 
-mod common;
-use common::{bench_at_sizes, groups, ids, interleaved_complex, throughput_complex, LENGTHS};
+use crate::common::{
+    bench_at_sizes, groups, ids, interleaved_complex, throughput_complex, LENGTHS,
+};
 
 macro_rules! rustfft_c2c {
     ($name:ident, $float:ty, $plan_method:ident, $group:expr) => {
-        fn $name(c: &mut Criterion) {
+        pub fn $name(c: &mut Criterion) {
             bench_at_sizes(
                 c,
                 $group,
@@ -46,10 +47,27 @@ macro_rules! rustfft_c2c {
     };
 }
 
-rustfft_c2c!(fwd_f32, f32, plan_fft_forward, groups::C2C_FORWARD_F32);
-rustfft_c2c!(inv_f32, f32, plan_fft_inverse, groups::C2C_INVERSE_F32);
-rustfft_c2c!(fwd_f64, f64, plan_fft_forward, groups::C2C_FORWARD_F64);
-rustfft_c2c!(inv_f64, f64, plan_fft_inverse, groups::C2C_INVERSE_F64);
-
-criterion_group!(benches, fwd_f32, inv_f32, fwd_f64, inv_f64);
-criterion_main!(benches);
+rustfft_c2c!(
+    rustfft_fwd_f32,
+    f32,
+    plan_fft_forward,
+    groups::C2C_FORWARD_F32
+);
+rustfft_c2c!(
+    rustfft_inv_f32,
+    f32,
+    plan_fft_inverse,
+    groups::C2C_INVERSE_F32
+);
+rustfft_c2c!(
+    rustfft_fwd_f64,
+    f64,
+    plan_fft_forward,
+    groups::C2C_FORWARD_F64
+);
+rustfft_c2c!(
+    rustfft_inv_f64,
+    f64,
+    plan_fft_inverse,
+    groups::C2C_INVERSE_F64
+);

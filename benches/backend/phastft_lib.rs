@@ -1,35 +1,57 @@
-//! Important: this benchmark only measures small-to-mid sizes; criterion is
-//! not a good fit for measuring long-running tasks — see
-//! `examples/benchmark.rs` for the harness for large sizes.
+//! Important: this benchmark only measures small-to-mid sizes, which are
+//! not the focus of PhastFT. Criterion is not a good fit for measuring
+//! long-running tasks — see `examples/benchmark.rs` for the harness for
+//! large sizes.
 //!
-//! Unlike the C2C cross-library comparison (split across `bench.rs` vs.
-//! `rustfft.rs` vs. `fftw_*.rs`), both PhastFT R2C/C2R and the realfft
-//! baseline live in this single bench binary. The split-per-library
-//! convention exists primarily to isolate FFTW's per-process wisdom cache
-//! between planning modes; realfft has no such cache, so a single binary
-//! suffices and gives a self-contained PhastFT-vs-realfft comparison.
+//! The PhastFT, RustFFT, and FFTW bench binaries all write into the same
+//! `target/criterion/<group>/<id>/<size>/` tree; criterion does NOT
+//! auto-aggregate across binaries, so use
+//! `benches/plot_criterion_overlay.py` to produce a single overlay plot per
+//! group after running them all.
 
-use criterion::{criterion_group, criterion_main, BatchSize, BenchmarkId, Criterion};
+use criterion::{BatchSize, BenchmarkId, Criterion};
 use phastft::options::Options;
-use phastft::planner::{PlannerR2c32, PlannerR2c64};
+use phastft::planner::{Direction, PlannerDit32, PlannerDit64, PlannerR2c32, PlannerR2c64};
 use phastft::{
     c2r_fft_f32_with_planner_and_opts, c2r_fft_f64_with_planner_and_opts,
+    fft_f32_dit_with_planner_and_opts, fft_f64_dit_with_planner_and_opts,
     r2c_fft_f32_with_planner_and_opts, r2c_fft_f64_with_planner_and_opts,
 };
-use realfft::RealFftPlanner;
 
-mod common;
-use common::{
-    bench_at_sizes, groups, ids, real_signal, spectrum_interleaved, spectrum_split,
+use crate::common::{
+    bench_at_sizes, groups, ids, real_signal, spectrum_split, split_complex, throughput_complex,
     throughput_real, LENGTHS,
 };
-//
-// Group names (snake_case): r2c_f32 / r2c_f64 / c2r_f32 / c2r_f64 — distinct
-// from the C2C groups, so no overlay aggregation across binaries needed.
 
-macro_rules! r2c_bench {
+macro_rules! phastft_c2c {
+    ($name:ident, $float:ty, $planner:ty, $fft:ident, $dir:expr, $group:expr) => {
+        pub fn $name(c: &mut Criterion) {
+            bench_at_sizes(
+                c,
+                $group,
+                LENGTHS,
+                throughput_complex::<$float>,
+                |g, len| {
+                    let opts = Options::guess_options(len);
+                    let planner = <$planner>::new(len);
+                    g.bench_function(BenchmarkId::new(ids::PHASTFT_DIT, len), |b| {
+                        b.iter_batched(
+                            || split_complex::<$float>(len),
+                            |(mut reals, mut imags)| {
+                                $fft(&mut reals, &mut imags, $dir, &planner, &opts);
+                                std::hint::black_box((&mut reals, &mut imags));
+                            },
+                            BatchSize::SmallInput,
+                        );
+                    });
+                },
+            );
+        }
+    };
+}
+macro_rules! phastft_r2c {
     ($name:ident, $float:ty, $planner:ty, $fft_fn:ident, $group:expr) => {
-        fn $name(c: &mut Criterion) {
+        pub fn $name(c: &mut Criterion) {
             bench_at_sizes(c, $group, LENGTHS, throughput_real::<$float>, |g, len| {
                 // Plan + output buffers allocated outside iter_batched —
                 // planning and allocation cost is excluded from per-sample timings.
@@ -53,31 +75,14 @@ macro_rules! r2c_bench {
                         BatchSize::SmallInput,
                     );
                 });
-
-                let mut rf_planner = RealFftPlanner::<$float>::new();
-                let rf_r2c = rf_planner.plan_fft_forward(len);
-                let mut rf_output = rf_r2c.make_output_vec();
-                let mut rf_scratch = rf_r2c.make_scratch_vec();
-                g.bench_function(BenchmarkId::new(ids::REALFFT, len), |b| {
-                    b.iter_batched(
-                        || real_signal::<$float>(len),
-                        |mut input| {
-                            rf_r2c
-                                .process_with_scratch(&mut input, &mut rf_output, &mut rf_scratch)
-                                .unwrap();
-                            std::hint::black_box(&mut rf_output);
-                        },
-                        BatchSize::SmallInput,
-                    );
-                });
             });
         }
     };
 }
 
-macro_rules! c2r_bench {
+macro_rules! phastft_c2r {
     ($name:ident, $float:ty, $planner:ty, $fft_fn:ident, $group:expr) => {
-        fn $name(c: &mut Criterion) {
+        pub fn $name(c: &mut Criterion) {
             bench_at_sizes(c, $group, LENGTHS, throughput_real::<$float>, |g, len| {
                 let phast_planner = <$planner>::new(len);
                 let phast_opts = Options::guess_options(len / 2);
@@ -102,56 +107,67 @@ macro_rules! c2r_bench {
                         BatchSize::SmallInput,
                     );
                 });
-
-                let mut rf_planner = RealFftPlanner::<$float>::new();
-                let rf_c2r = rf_planner.plan_fft_inverse(len);
-                let mut rf_output = rf_c2r.make_output_vec();
-                let mut rf_scratch = rf_c2r.make_scratch_vec();
-                g.bench_function(BenchmarkId::new(ids::REALFFT, len), |b| {
-                    b.iter_batched(
-                        || spectrum_interleaved::<$float>(len),
-                        |mut input| {
-                            rf_c2r
-                                .process_with_scratch(&mut input, &mut rf_output, &mut rf_scratch)
-                                .unwrap();
-                            std::hint::black_box(&mut rf_output);
-                        },
-                        BatchSize::SmallInput,
-                    );
-                });
             });
         }
     };
 }
-
-r2c_bench!(
-    r2c_f32,
+phastft_c2c!(
+    phastft_c2c_fwd_f32,
+    f32,
+    PlannerDit32,
+    fft_f32_dit_with_planner_and_opts,
+    Direction::Forward,
+    groups::C2C_FORWARD_F32
+);
+phastft_c2c!(
+    phastft_c2c_inv_f32,
+    f32,
+    PlannerDit32,
+    fft_f32_dit_with_planner_and_opts,
+    Direction::Inverse,
+    groups::C2C_INVERSE_F32
+);
+phastft_c2c!(
+    phastft_c2c_fwd_f64,
+    f64,
+    PlannerDit64,
+    fft_f64_dit_with_planner_and_opts,
+    Direction::Forward,
+    groups::C2C_FORWARD_F64
+);
+phastft_c2c!(
+    phastft_c2c_inv_f64,
+    f64,
+    PlannerDit64,
+    fft_f64_dit_with_planner_and_opts,
+    Direction::Inverse,
+    groups::C2C_INVERSE_F64
+);
+phastft_r2c!(
+    phastft_r2c_f32,
     f32,
     PlannerR2c32,
     r2c_fft_f32_with_planner_and_opts,
     groups::R2C_F32
 );
-r2c_bench!(
-    r2c_f64,
+phastft_r2c!(
+    phastft_r2c_f64,
     f64,
     PlannerR2c64,
     r2c_fft_f64_with_planner_and_opts,
     groups::R2C_F64
 );
-c2r_bench!(
-    c2r_f32,
+phastft_c2r!(
+    phastft_c2r_f32,
     f32,
     PlannerR2c32,
     c2r_fft_f32_with_planner_and_opts,
     groups::C2R_F32
 );
-c2r_bench!(
-    c2r_f64,
+phastft_c2r!(
+    phastft_c2r_f64,
     f64,
     PlannerR2c64,
     c2r_fft_f64_with_planner_and_opts,
     groups::C2R_F64
 );
-
-criterion_group!(benches, r2c_f32, c2r_f32, r2c_f64, c2r_f64);
-criterion_main!(benches);
