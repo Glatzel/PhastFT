@@ -343,7 +343,7 @@ fn run_hc2r(c: &mut Criterion, id: &str, flags: Flag) {
     hc2r_f64(c, id, mk());
 }
 
-pub fn fftw_c2c_fwd(c: &mut Criterion) {
+pub fn fftw_c2c_fwd_all(c: &mut Criterion) {
     run_c2c_forward(
         c,
         ids::FFTW_CONSERVE_C2C,
@@ -357,7 +357,7 @@ pub fn fftw_c2c_fwd(c: &mut Criterion) {
     run_c2c_forward(c, ids::FFTW_MEASURE_C2C, Flag::DESTROYINPUT | Flag::MEASURE);
 }
 
-pub fn fftw_c2c_inv(c: &mut Criterion) {
+pub fn fftw_c2c_inv_all(c: &mut Criterion) {
     run_c2c_inverse(
         c,
         ids::FFTW_CONSERVE_C2C,
@@ -371,7 +371,7 @@ pub fn fftw_c2c_inv(c: &mut Criterion) {
     run_c2c_inverse(c, ids::FFTW_MEASURE_C2C, Flag::DESTROYINPUT | Flag::MEASURE);
 }
 
-pub fn fftw_c2r(c: &mut Criterion) {
+pub fn fftw_c2r_all(c: &mut Criterion) {
     run_c2r(
         c,
         ids::FFTW_CONSERVE_C2R,
@@ -404,7 +404,7 @@ pub fn fftw_c2r(c: &mut Criterion) {
     );
 }
 
-pub fn fftw_r2c(c: &mut Criterion) {
+pub fn fftw_r2c_all(c: &mut Criterion) {
     run_r2c(
         c,
         ids::FFTW_CONSERVE_R2C,

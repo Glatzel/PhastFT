@@ -76,6 +76,14 @@ required-features = ["bench-internals"]
 inherits = "release"
 debug = true
 
+[profile.bench]
+inherits = "release"
+debug = false
+lto = "fat"
+codegen-units = 1
+opt-level = 3
+strip = "symbols"
+
 [package.metadata.docs.rs]
 all-features = true
 

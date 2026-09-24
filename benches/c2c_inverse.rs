@@ -17,7 +17,7 @@
 
 use criterion::{criterion_group, criterion_main};
 
-use crate::backend::fftw_lib::fftw_c2c_inv;
+use crate::backend::fftw_lib::fftw_c2c_inv_all;
 use crate::backend::phastft_lib::{phastft_c2c_inv_f32, phastft_c2c_inv_f64};
 use crate::backend::rustfft_lib::{rustfft_inv_f32, rustfft_inv_f64};
 
@@ -30,6 +30,6 @@ criterion_group!(
     phastft_c2c_inv_f64,
     rustfft_inv_f32,
     rustfft_inv_f64,
-    fftw_c2c_inv
+    fftw_c2c_inv_all
 );
 criterion_main!(benches);
