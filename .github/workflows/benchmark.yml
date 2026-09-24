@@ -35,10 +35,10 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Benchmark
-        run: |
-            cargo bench --bench ${{ matrix.target }} \
-            --profile bench \
-            --no-default-features \
+        run: >
+            cargo bench --bench ${{ matrix.target }} 
+            --profile bench 
+            --no-default-features 
             --features="bench-internals,complex-nums,${{ inputs.parallel && 'parallel' || null }}"
 
       - name: Upload benchmark
