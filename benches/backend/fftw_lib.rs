@@ -15,9 +15,11 @@
 //! reconstruct the real signal. They provide a real-valued alternative to
 //! the explicitly complex R2C/C2R interface.
 
+use std::hint::black_box;
 use std::ptr::slice_from_raw_parts_mut;
 
-use criterion::{BatchSize, BenchmarkId, Criterion};
+use criterion::measurement::Measurement;
+use criterion::{BatchSize, BenchmarkGroup, BenchmarkId, Criterion};
 use fftw::array::AlignedVec;
 use fftw::plan::{
     C2CPlan, C2CPlan32, C2CPlan64, C2RPlan, C2RPlan32, C2RPlan64, R2CPlan, R2CPlan32, R2CPlan64,
@@ -32,50 +34,114 @@ use crate::common::{
     LENGTHS,
 };
 
-macro_rules! fftw_sweep_c2c {
+#[derive(Clone, Copy)]
+enum Mode {
+    Conserve,
+    Estimate,
+    Measure,
+}
+
+impl Mode {
+    const ALL: [Mode; 3] = [Mode::Conserve, Mode::Estimate, Mode::Measure];
+
+    /// `Flag` is not `Copy`, so build a fresh one whenever it is needed.
+    fn flags(self) -> Flag {
+        match self {
+            Mode::Conserve => Flag::DESTROYINPUT | Flag::MEASURE | Flag::CONSERVEMEMORY,
+            Mode::Estimate => Flag::DESTROYINPUT | Flag::ESTIMATE,
+            Mode::Measure => Flag::DESTROYINPUT | Flag::MEASURE,
+        }
+    }
+
+    /// Pick this mode's series id from `[conserve, estimate, measure]`.
+    fn id(self, ids: [&'static str; 3]) -> &'static str {
+        ids[self as usize]
+    }
+}
+
+const C2C_IDS: [&str; 3] = [
+    ids::FFTW_CONSERVE_C2C,
+    ids::FFTW_ESTIMATE_C2C,
+    ids::FFTW_MEASURE_C2C,
+];
+const R2C_IDS: [&str; 3] = [
+    ids::FFTW_CONSERVE_R2C,
+    ids::FFTW_ESTIMATE_R2C,
+    ids::FFTW_MEASURE_R2C,
+];
+const C2R_IDS: [&str; 3] = [
+    ids::FFTW_CONSERVE_C2R,
+    ids::FFTW_ESTIMATE_C2R,
+    ids::FFTW_MEASURE_C2R,
+];
+const R2R_IDS: [&str; 3] = [
+    ids::FFTW_CONSERVE_R2R,
+    ids::FFTW_ESTIMATE_R2R,
+    ids::FFTW_MEASURE_R2R,
+];
+
+/// Run `f` once per planning mode, forgetting wisdom after each so that no
+/// mode can reuse plans produced by another.
+fn per_mode(mut f: impl FnMut(Mode)) {
+    for mode in Mode::ALL {
+        f(mode);
+        // SAFETY: argument-free FFI call.
+        unsafe { fftw_forget_wisdom() };
+    }
+}
+
+/// Benchmark `run(&mut plan, setup())` with a fresh input per batch.
+fn bench_batched<M: Measurement, P, S>(
+    g: &mut BenchmarkGroup<'_, M>,
+    id: &str,
+    len: usize,
+    mut plan: P,
+    mut setup: impl FnMut() -> S,
+    mut run: impl FnMut(&mut P, S),
+) {
+    g.bench_function(BenchmarkId::new(id, len), |b| {
+        b.iter_batched(
+            &mut setup,
+            |data| run(&mut plan, data),
+            BatchSize::SmallInput,
+        );
+    });
+}
+
+/// Re-borrow `buf` as a second `&mut` slice, for FFTW's in-place calls, which
+/// take separate input and output arguments.
+///
+/// # Safety
+/// The returned slice aliases `buf` and must only be used for the in-place
+/// FFTW call it is passed to, while `buf` is not otherwise accessed.
+unsafe fn alias_mut<'a, T>(buf: &mut [T]) -> &'a mut [T] {
+    unsafe { &mut *slice_from_raw_parts_mut(buf.as_mut_ptr(), buf.len()) }
+}
+
+macro_rules! sweep_c2c {
     ($name:ident, $float:ty, $plan:ty, $sign:expr, $group:expr) => {
-        fn $name(c: &mut Criterion, id: &str, flags: Flag) {
-            // `Flag` (bitflags 2 in the fftw crate) does not derive `Copy`,
-            // so we can't capture it by value across iterations of an FnMut
-            // closure. Round-trip through the underlying `u32` bits, which
-            // are Copy, and reconstruct the flag set per `n`.
-            let flag_bits = flags.bits();
+        fn $name(c: &mut Criterion, id: &str, mode: Mode) {
             bench_at_sizes(
                 c,
                 $group,
                 LENGTHS,
                 throughput_complex::<$float>,
                 move |g, len| {
-                    let mut plan =
-                        <$plan>::aligned(&[len], $sign, Flag::from_bits_retain(flag_bits)).unwrap();
-                    g.bench_function(BenchmarkId::new(id, len), |b| {
-                        b.iter_batched(
-                            || {
-                                let (reals, imags) = split_complex::<$float>(len);
-                                let mut nums: AlignedVec<Complex<$float>> = AlignedVec::new(len);
-                                for (z, (&re, &im)) in
-                                    nums.iter_mut().zip(reals.iter().zip(imags.iter()))
-                                {
-                                    *z = Complex::new(re, im);
-                                }
-                                nums
-                            },
-                            |mut nums| {
-                                plan.c2c(
-                                    // SAFETY: identical shape to examples/fftwrb.rs:42-48.
-                                    // DESTROYINPUT permits in-place c2c; the raw slice
-                                    // aliases `nums` for the duration of the call and
-                                    // `len` matches the AlignedVec allocation.
-                                    unsafe {
-                                        &mut *slice_from_raw_parts_mut(nums.as_mut_ptr(), len)
-                                    },
-                                    &mut nums,
-                                )
-                                .unwrap();
-                                std::hint::black_box(&mut nums);
-                            },
-                            BatchSize::SmallInput,
-                        );
+                    let plan = <$plan>::aligned(&[len], $sign, mode.flags()).unwrap();
+                    let setup = || {
+                        let (reals, imags) = split_complex::<$float>(len);
+                        let mut nums: AlignedVec<Complex<$float>> = AlignedVec::new(len);
+                        for (z, (&re, &im)) in nums.iter_mut().zip(reals.iter().zip(imags.iter()))
+                        {
+                            *z = Complex::new(re, im);
+                        }
+                        nums
+                    };
+                    bench_batched(g, id, len, plan, setup, |plan, mut nums| {
+                        // SAFETY: in-place transform (DESTROYINPUT permits it).
+                        plan.c2c(unsafe { alias_mut(&mut nums) }, &mut nums)
+                            .unwrap();
+                        black_box(&mut nums);
                     });
                 },
             );
@@ -83,41 +149,27 @@ macro_rules! fftw_sweep_c2c {
     };
 }
 
-macro_rules! fftw_sweep_r2c {
+macro_rules! sweep_r2c {
     ($name:ident, $float:ty, $plan:ty, $group:expr) => {
-        fn $name(c: &mut Criterion, id: &str, flags: Flag) {
-            // `Flag` (bitflags 2 in the fftw crate) does not derive `Copy`,
-            // so we can't capture it by value across iterations of an FnMut
-            // closure. Round-trip through the underlying `u32` bits, which
-            // are Copy, and reconstruct the flag set per `n`.
-            let flag_bits = flags.bits();
+        fn $name(c: &mut Criterion, id: &str, mode: Mode) {
             bench_at_sizes(
                 c,
                 $group,
                 LENGTHS,
                 throughput_real::<$float>,
                 move |g, len| {
-                    let mut plan =
-                        <$plan>::aligned(&[len], Flag::from_bits_retain(flag_bits)).unwrap();
-                    g.bench_function(BenchmarkId::new(id, len), |b| {
-                        b.iter_batched(
-                            || {
-                                // Real input of length `len`; the r2c output
-                                // is the conjugate-symmetric half-spectrum,
-                                // length `len / 2 + 1`.
-                                let signal = real_signal::<$float>(len);
-                                let mut input: AlignedVec<$float> = AlignedVec::new(len);
-                                input.copy_from_slice(&signal);
-                                let output: AlignedVec<Complex<$float>> =
-                                    AlignedVec::new(len / 2 + 1);
-                                (input, output)
-                            },
-                            |(mut input, mut output)| {
-                                plan.r2c(&mut input, &mut output).unwrap();
-                                std::hint::black_box(&mut output);
-                            },
-                            BatchSize::SmallInput,
-                        );
+                    let plan = <$plan>::aligned(&[len], mode.flags()).unwrap();
+                    let setup = || {
+                        // Real input of length `len`; the output is the
+                        // conjugate-symmetric half-spectrum, `len / 2 + 1`.
+                        let mut input: AlignedVec<$float> = AlignedVec::new(len);
+                        input.copy_from_slice(&real_signal::<$float>(len));
+                        let output: AlignedVec<Complex<$float>> = AlignedVec::new(len / 2 + 1);
+                        (input, output)
+                    };
+                    bench_batched(g, id, len, plan, setup, |plan, (mut input, mut output)| {
+                        plan.r2c(&mut input, &mut output).unwrap();
+                        black_box(&mut output);
                     });
                 },
             );
@@ -125,44 +177,31 @@ macro_rules! fftw_sweep_r2c {
     };
 }
 
-macro_rules! fftw_sweep_c2r {
+macro_rules! sweep_c2r {
     ($name:ident, $float:ty, $plan:ty, $group:expr) => {
-        fn $name(c: &mut Criterion, id: &str, flags: Flag) {
-            // `Flag` (bitflags 2 in the fftw crate) does not derive `Copy`,
-            // so we can't capture it by value across iterations of an FnMut
-            // closure. Round-trip through the underlying `u32` bits, which
-            // are Copy, and reconstruct the flag set per `n`.
-            let flag_bits = flags.bits();
+        fn $name(c: &mut Criterion, id: &str, mode: Mode) {
             bench_at_sizes(
                 c,
                 $group,
                 LENGTHS,
                 throughput_real::<$float>,
                 move |g, len| {
-                    let mut plan =
-                        <$plan>::aligned(&[len], Flag::from_bits_retain(flag_bits)).unwrap();
-                    g.bench_function(BenchmarkId::new(id, len), |b| {
-                        b.iter_batched(
-                            || {
-                                // Complex half-spectrum input, length
-                                // `len / 2 + 1`; real output of length `len`.
-                                let (reals, imags) = split_complex::<$float>(len / 2 + 1);
-                                let mut input: AlignedVec<Complex<$float>> =
-                                    AlignedVec::new(len / 2 + 1);
-                                for (z, (&re, &im)) in
-                                    input.iter_mut().zip(reals.iter().zip(imags.iter()))
-                                {
-                                    *z = Complex::new(re, im);
-                                }
-                                let output: AlignedVec<$float> = AlignedVec::new(len);
-                                (input, output)
-                            },
-                            |(mut input, mut output)| {
-                                plan.c2r(&mut input, &mut output).unwrap();
-                                std::hint::black_box(&mut output);
-                            },
-                            BatchSize::SmallInput,
-                        );
+                    let plan = <$plan>::aligned(&[len], mode.flags()).unwrap();
+                    let setup = || {
+                        // Complex half-spectrum in (`len / 2 + 1`), real out (`len`).
+                        let (reals, imags) = split_complex::<$float>(len / 2 + 1);
+                        let mut input: AlignedVec<Complex<$float>> = AlignedVec::new(len / 2 + 1);
+                        for (z, (&re, &im)) in
+                            input.iter_mut().zip(reals.iter().zip(imags.iter()))
+                        {
+                            *z = Complex::new(re, im);
+                        }
+                        let output: AlignedVec<$float> = AlignedVec::new(len);
+                        (input, output)
+                    };
+                    bench_batched(g, id, len, plan, setup, |plan, (mut input, mut output)| {
+                        plan.c2r(&mut input, &mut output).unwrap();
+                        black_box(&mut output);
                     });
                 },
             );
@@ -170,49 +209,27 @@ macro_rules! fftw_sweep_c2r {
     };
 }
 
-macro_rules! fftw_sweep_r2r {
+macro_rules! sweep_r2r {
     ($name:ident, $float:ty, $plan:ty, $group:expr, $kind:expr) => {
-        fn $name(c: &mut Criterion, id: &str, flags: Flag) {
-            // `Flag` (bitflags 2 in the fftw crate) does not derive `Copy`,
-            // so we can't capture it by value across iterations of an FnMut
-            // closure. Round-trip through the underlying `u32` bits, which
-            // are Copy, and reconstruct the flag set per `n`.
-            let flag_bits = flags.bits();
+        fn $name(c: &mut Criterion, id: &str, mode: Mode) {
             bench_at_sizes(
                 c,
                 $group,
                 LENGTHS,
                 throughput_real::<$float>,
                 move |g, len| {
-                    // R2R has no Sign — direction/kind (DCT-II, DST-I, ...)
-                    // is baked into `$kind` (an R2RKind), passed per-axis.
-                    let mut plan =
-                        <$plan>::aligned(&[len], $kind, Flag::from_bits_retain(flag_bits)).unwrap();
-                    g.bench_function(BenchmarkId::new(id, len), |b| {
-                        b.iter_batched(
-                            || {
-                                // Real in, real out — no Complex involved.
-                                let (reals, _imags) = split_complex::<$float>(len);
-                                let mut nums: AlignedVec<$float> = AlignedVec::new(len);
-                                nums.copy_from_slice(&reals);
-                                nums
-                            },
-                            |mut nums| {
-                                plan.r2r(
-                                    // SAFETY: in-place r2r transform; the raw
-                                    // slice aliases `nums` for the duration
-                                    // of the call and `len` matches the
-                                    // AlignedVec allocation.
-                                    unsafe {
-                                        &mut *slice_from_raw_parts_mut(nums.as_mut_ptr(), len)
-                                    },
-                                    &mut nums,
-                                )
-                                .unwrap();
-                                std::hint::black_box(&mut nums);
-                            },
-                            BatchSize::SmallInput,
-                        );
+                    // R2R has no `Sign`: the kind (R2HC, HC2R, ...) says it all.
+                    let plan = <$plan>::aligned(&[len], $kind, mode.flags()).unwrap();
+                    let setup = || {
+                        let mut nums: AlignedVec<$float> = AlignedVec::new(len);
+                        nums.copy_from_slice(&real_signal::<$float>(len));
+                        nums
+                    };
+                    bench_batched(g, id, len, plan, setup, |plan, mut nums| {
+                        // SAFETY: in-place transform.
+                        plan.r2r(unsafe { alias_mut(&mut nums) }, &mut nums)
+                            .unwrap();
+                        black_box(&mut nums);
                     });
                 },
             );
@@ -220,231 +237,53 @@ macro_rules! fftw_sweep_r2r {
     };
 }
 
-fftw_sweep_c2c!(
-    c2c_fwd_f32,
-    f32,
-    C2CPlan32,
-    Sign::Forward,
-    groups::C2C_FORWARD_F32
-);
-fftw_sweep_c2c!(
-    c2c_inv_f32,
-    f32,
-    C2CPlan32,
-    Sign::Backward,
-    groups::C2C_INVERSE_F32
-);
-fftw_sweep_c2c!(
-    c2c_fwd_f64,
-    f64,
-    C2CPlan64,
-    Sign::Forward,
-    groups::C2C_FORWARD_F64
-);
-fftw_sweep_c2c!(
-    c2c_inv_f64,
-    f64,
-    C2CPlan64,
-    Sign::Backward,
-    groups::C2C_INVERSE_F64
-);
+sweep_c2c!(c2c_fwd_f32, f32, C2CPlan32, Sign::Forward, groups::C2C_FORWARD_F32);
+sweep_c2c!(c2c_inv_f32, f32, C2CPlan32, Sign::Backward, groups::C2C_INVERSE_F32);
+sweep_c2c!(c2c_fwd_f64, f64, C2CPlan64, Sign::Forward, groups::C2C_FORWARD_F64);
+sweep_c2c!(c2c_inv_f64, f64, C2CPlan64, Sign::Backward, groups::C2C_INVERSE_F64);
 
-fftw_sweep_r2c!(r2c_f32, f32, R2CPlan32, groups::R2C_F32);
-fftw_sweep_r2c!(r2c_f64, f64, R2CPlan64, groups::R2C_F64);
-fftw_sweep_c2r!(c2r_f32, f32, C2RPlan32, groups::C2R_F32);
-fftw_sweep_c2r!(c2r_f64, f64, C2RPlan64, groups::C2R_F64);
+sweep_r2c!(r2c_f32, f32, R2CPlan32, groups::R2C_F32);
+sweep_r2c!(r2c_f64, f64, R2CPlan64, groups::R2C_F64);
+sweep_c2r!(c2r_f32, f32, C2RPlan32, groups::C2R_F32);
+sweep_c2r!(c2r_f64, f64, C2RPlan64, groups::C2R_F64);
 
-fftw_sweep_r2r!(
-    r2hc_f32,
-    f32,
-    R2RPlan32,
-    groups::R2C_F32,
-    R2RKind::FFTW_R2HC
-);
-fftw_sweep_r2r!(
-    r2hc_f64,
-    f64,
-    R2RPlan64,
-    groups::R2C_F64,
-    R2RKind::FFTW_R2HC
-);
-fftw_sweep_r2r!(
-    hc2r_f32,
-    f32,
-    R2RPlan32,
-    groups::C2R_F32,
-    R2RKind::FFTW_HC2R
-);
-fftw_sweep_r2r!(
-    hc2r_f64,
-    f64,
-    R2RPlan64,
-    groups::C2R_F64,
-    R2RKind::FFTW_HC2R
-);
-
-/// Run all two c2c_forward groups (f32/f64) with the given
-/// FFTW `flags` and series `id`. The three per-mode bench binaries each
-/// call this once with their own `Flag` set.
-fn run_c2c_forward(c: &mut Criterion, id: &str, flags: Flag) {
-    // `Flag` isn't `Copy`, so reconstruct from its u32 bits for each call.
-    let bits = flags.bits();
-    let mk = || Flag::from_bits_retain(bits);
-    c2c_fwd_f32(c, id, mk());
-    c2c_fwd_f64(c, id, mk());
-}
-
-/// Run all two c2c_inverse groups (f32/f64) with the given
-/// FFTW `flags` and series `id`. The three per-mode bench binaries each
-/// call this once with their own `Flag` set.
-fn run_c2c_inverse(c: &mut Criterion, id: &str, flags: Flag) {
-    // `Flag` isn't `Copy`, so reconstruct from its u32 bits for each call.
-    let bits = flags.bits();
-    let mk = || Flag::from_bits_retain(bits);
-    c2c_inv_f32(c, id, mk());
-    c2c_inv_f64(c, id, mk());
-}
-
-/// Run all four r2c groups (f32/f64) with the given
-/// FFTW `flags` and series `id`. The three per-mode bench binaries each
-/// call this once with their own `Flag` set.
-pub fn run_r2c(c: &mut Criterion, id: &str, flags: Flag) {
-    // `Flag` isn't `Copy`, so reconstruct from its u32 bits for each call.
-    let bits = flags.bits();
-    let mk = || Flag::from_bits_retain(bits);
-    r2c_f32(c, id, mk());
-    r2c_f64(c, id, mk());
-}
-
-/// Run all four c2r groups (f32/f64) with the given
-/// FFTW `flags` and series `id`. The three per-mode bench binaries each
-/// call this once with their own `Flag` set.
-fn run_c2r(c: &mut Criterion, id: &str, flags: Flag) {
-    // `Flag` isn't `Copy`, so reconstruct from its u32 bits for each call.
-    let bits = flags.bits();
-    let mk = || Flag::from_bits_retain(bits);
-    c2r_f32(c, id, mk());
-    c2r_f64(c, id, mk());
-}
-
-/// Run all four r2hc groups (f32/f64) with the given
-/// FFTW `flags` and series `id`. The three per-mode bench binaries each
-/// call this once with their own `Flag` set.
-fn run_r2hc(c: &mut Criterion, id: &str, flags: Flag) {
-    // `Flag` isn't `Copy`, so reconstruct from its u32 bits for each call.
-    let bits = flags.bits();
-    let mk = || Flag::from_bits_retain(bits);
-    r2hc_f32(c, id, mk());
-    r2hc_f64(c, id, mk());
-}
-
-/// Run all four hc2r groups (f32/f64) with the given
-/// FFTW `flags` and series `id`. The three per-mode bench binaries each
-/// call this once with their own `Flag` set.
-fn run_hc2r(c: &mut Criterion, id: &str, flags: Flag) {
-    // `Flag` isn't `Copy`, so reconstruct from its u32 bits for each call.
-    let bits = flags.bits();
-    let mk = || Flag::from_bits_retain(bits);
-    hc2r_f32(c, id, mk());
-    hc2r_f64(c, id, mk());
-}
+sweep_r2r!(r2hc_f32, f32, R2RPlan32, groups::R2C_F32, R2RKind::FFTW_R2HC);
+sweep_r2r!(r2hc_f64, f64, R2RPlan64, groups::R2C_F64, R2RKind::FFTW_R2HC);
+sweep_r2r!(hc2r_f32, f32, R2RPlan32, groups::C2R_F32, R2RKind::FFTW_HC2R);
+sweep_r2r!(hc2r_f64, f64, R2RPlan64, groups::C2R_F64, R2RKind::FFTW_HC2R);
 
 pub fn fftw_c2c_fwd_all(c: &mut Criterion) {
-    run_c2c_forward(
-        c,
-        ids::FFTW_CONSERVE_C2C,
-        Flag::DESTROYINPUT | Flag::MEASURE | Flag::CONSERVEMEMORY,
-    );
-    unsafe { fftw_forget_wisdom() };
-    run_c2c_forward(
-        c,
-        ids::FFTW_ESTIMATE_C2C,
-        Flag::DESTROYINPUT | Flag::ESTIMATE,
-    );
-    unsafe { fftw_forget_wisdom() };
-    run_c2c_forward(c, ids::FFTW_MEASURE_C2C, Flag::DESTROYINPUT | Flag::MEASURE);
-    unsafe { fftw_forget_wisdom() };
+    per_mode(|m| {
+        c2c_fwd_f32(c, m.id(C2C_IDS), m);
+        c2c_fwd_f64(c, m.id(C2C_IDS), m);
+    });
 }
 
 pub fn fftw_c2c_inv_all(c: &mut Criterion) {
-    run_c2c_inverse(
-        c,
-        ids::FFTW_CONSERVE_C2C,
-        Flag::DESTROYINPUT | Flag::MEASURE | Flag::CONSERVEMEMORY,
-    );
-    unsafe { fftw_forget_wisdom() };
-    run_c2c_inverse(
-        c,
-        ids::FFTW_ESTIMATE_C2C,
-        Flag::DESTROYINPUT | Flag::ESTIMATE,
-    );
-    unsafe { fftw_forget_wisdom() };
-    run_c2c_inverse(c, ids::FFTW_MEASURE_C2C, Flag::DESTROYINPUT | Flag::MEASURE);
-    unsafe { fftw_forget_wisdom() };
+    per_mode(|m| {
+        c2c_inv_f32(c, m.id(C2C_IDS), m);
+        c2c_inv_f64(c, m.id(C2C_IDS), m);
+    });
 }
 
 pub fn fftw_r2c_all(c: &mut Criterion) {
-    run_r2c(
-        c,
-        ids::FFTW_CONSERVE_R2C,
-        Flag::DESTROYINPUT | Flag::MEASURE | Flag::CONSERVEMEMORY,
-    );
-    unsafe { fftw_forget_wisdom() };
-    run_r2c(
-        c,
-        ids::FFTW_ESTIMATE_R2C,
-        Flag::DESTROYINPUT | Flag::ESTIMATE,
-    );
-    unsafe { fftw_forget_wisdom() };
-    run_r2c(
-        c,
-        ids::FFTW_MEASURE_R2C,
-        Flag::DESTROYINPUT | Flag::MEASURE | Flag::CONSERVEMEMORY,
-    );
-    unsafe { fftw_forget_wisdom() };
-    run_r2hc(
-        c,
-        ids::FFTW_CONSERVE_R2R,
-        Flag::DESTROYINPUT | Flag::MEASURE | Flag::CONSERVEMEMORY,
-    );
-    unsafe { fftw_forget_wisdom() };
-    run_r2hc(
-        c,
-        ids::FFTW_ESTIMATE_R2R,
-        Flag::DESTROYINPUT | Flag::ESTIMATE,
-    );
-    unsafe { fftw_forget_wisdom() };
-    run_r2hc(c, ids::FFTW_MEASURE_R2R, Flag::DESTROYINPUT | Flag::MEASURE);
-    unsafe { fftw_forget_wisdom() };
+    per_mode(|m| {
+        r2c_f32(c, m.id(R2C_IDS), m);
+        r2c_f64(c, m.id(R2C_IDS), m);
+    });
+    per_mode(|m| {
+        r2hc_f32(c, m.id(R2R_IDS), m);
+        r2hc_f64(c, m.id(R2R_IDS), m);
+    });
 }
 
 pub fn fftw_c2r_all(c: &mut Criterion) {
-    run_c2r(
-        c,
-        ids::FFTW_CONSERVE_C2R,
-        Flag::DESTROYINPUT | Flag::MEASURE | Flag::CONSERVEMEMORY,
-    );
-    unsafe { fftw_forget_wisdom() };
-    run_c2r(
-        c,
-        ids::FFTW_ESTIMATE_C2R,
-        Flag::DESTROYINPUT | Flag::ESTIMATE,
-    );
-    unsafe { fftw_forget_wisdom() };
-    run_c2r(c, ids::FFTW_MEASURE_C2R, Flag::DESTROYINPUT | Flag::MEASURE);
-    unsafe { fftw_forget_wisdom() };
-    run_hc2r(
-        c,
-        ids::FFTW_CONSERVE_R2R,
-        Flag::DESTROYINPUT | Flag::MEASURE | Flag::CONSERVEMEMORY,
-    );
-    unsafe { fftw_forget_wisdom() };
-    run_hc2r(
-        c,
-        ids::FFTW_ESTIMATE_R2R,
-        Flag::DESTROYINPUT | Flag::ESTIMATE,
-    );
-    unsafe { fftw_forget_wisdom() };
-    run_hc2r(c, ids::FFTW_MEASURE_R2R, Flag::DESTROYINPUT | Flag::MEASURE);
-    unsafe { fftw_forget_wisdom() };
+    per_mode(|m| {
+        c2r_f32(c, m.id(C2R_IDS), m);
+        c2r_f64(c, m.id(C2R_IDS), m);
+    });
+    per_mode(|m| {
+        hc2r_f32(c, m.id(R2R_IDS), m);
+        hc2r_f64(c, m.id(R2R_IDS), m);
+    });
 }
