@@ -45,7 +45,7 @@ jobs:
           path: |
               target/criterion
           if-no-files-found: error
-          
+
   plot:
     needs: benchmark
     runs-on: ubuntu-latest
