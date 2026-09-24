@@ -371,39 +371,6 @@ pub fn fftw_c2c_inv_all(c: &mut Criterion) {
     run_c2c_inverse(c, ids::FFTW_MEASURE_C2C, Flag::DESTROYINPUT | Flag::MEASURE);
 }
 
-pub fn fftw_c2r_all(c: &mut Criterion) {
-    run_c2r(
-        c,
-        ids::FFTW_CONSERVE_C2R,
-        Flag::DESTROYINPUT | Flag::MEASURE | Flag::CONSERVEMEMORY,
-    );
-    run_c2r(
-        c,
-        ids::FFTW_CONSERVE_C2R,
-        Flag::DESTROYINPUT | Flag::ESTIMATE,
-    );
-    run_c2r(
-        c,
-        ids::FFTW_CONSERVE_C2R,
-        Flag::DESTROYINPUT | Flag::MEASURE,
-    );
-    run_hc2r(
-        c,
-        ids::FFTW_CONSERVE_R2R,
-        Flag::DESTROYINPUT | Flag::MEASURE | Flag::CONSERVEMEMORY,
-    );
-    run_hc2r(
-        c,
-        ids::FFTW_CONSERVE_R2R,
-        Flag::DESTROYINPUT | Flag::ESTIMATE,
-    );
-    run_hc2r(
-        c,
-        ids::FFTW_CONSERVE_R2R,
-        Flag::DESTROYINPUT | Flag::MEASURE,
-    );
-}
-
 pub fn fftw_r2c_all(c: &mut Criterion) {
     run_r2c(
         c,
@@ -412,12 +379,12 @@ pub fn fftw_r2c_all(c: &mut Criterion) {
     );
     run_r2c(
         c,
-        ids::FFTW_CONSERVE_R2C,
+        ids::FFTW_ESTIMATE_R2C,
         Flag::DESTROYINPUT | Flag::ESTIMATE,
     );
     run_r2c(
         c,
-        ids::FFTW_CONSERVE_R2C,
+        ids::FFTW_MEASURE_R2C,
         Flag::DESTROYINPUT | Flag::MEASURE | Flag::CONSERVEMEMORY,
     );
     run_r2hc(
@@ -427,12 +394,33 @@ pub fn fftw_r2c_all(c: &mut Criterion) {
     );
     run_r2hc(
         c,
-        ids::FFTW_CONSERVE_R2R,
+        ids::FFTW_ESTIMATE_R2R,
         Flag::DESTROYINPUT | Flag::ESTIMATE,
     );
-    run_r2hc(
+    run_r2hc(c, ids::FFTW_MEASURE_R2R, Flag::DESTROYINPUT | Flag::MEASURE);
+}
+
+pub fn fftw_c2r_all(c: &mut Criterion) {
+    run_c2r(
+        c,
+        ids::FFTW_CONSERVE_C2R,
+        Flag::DESTROYINPUT | Flag::MEASURE | Flag::CONSERVEMEMORY,
+    );
+    run_c2r(
+        c,
+        ids::FFTW_ESTIMATE_C2R,
+        Flag::DESTROYINPUT | Flag::ESTIMATE,
+    );
+    run_c2r(c, ids::FFTW_MEASURE_C2R, Flag::DESTROYINPUT | Flag::MEASURE);
+    run_hc2r(
         c,
         ids::FFTW_CONSERVE_R2R,
-        Flag::DESTROYINPUT | Flag::MEASURE,
+        Flag::DESTROYINPUT | Flag::MEASURE | Flag::CONSERVEMEMORY,
     );
+    run_hc2r(
+        c,
+        ids::FFTW_ESTIMATE_R2R,
+        Flag::DESTROYINPUT | Flag::ESTIMATE,
+    );
+    run_hc2r(c, ids::FFTW_MEASURE_R2R, Flag::DESTROYINPUT | Flag::MEASURE);
 }
