@@ -82,20 +82,20 @@ class GroupSpec:
 # and are skipped — the registry doubles as a "what groups are known"
 # list so unregistered output surfaces immediately.
 GROUPS: dict[str, GroupSpec] = {
-    "c2c_forward_f32": GroupSpec("C2C Forward (f32)", "RustFFT"),
-    "c2c_forward_f64": GroupSpec("C2C Forward (f64)", "RustFFT"),
-    "c2c_inverse_f32": GroupSpec("C2C Inverse (f32)", "RustFFT"),
-    "c2c_inverse_f64": GroupSpec("C2C Inverse (f64)", "RustFFT"),
-    "r2c_f32": GroupSpec("R2C (f32)", "realfft"),
-    "r2c_f64": GroupSpec("R2C (f64)", "realfft"),
-    "c2r_f32": GroupSpec("C2R (f32)", "realfft"),
-    "c2r_f64": GroupSpec("C2R (f64)", "realfft"),
-    "planner_f32": GroupSpec("Planner (f32)", "RustFFT"),
-    "planner_f64": GroupSpec("Planner (f64)", "RustFFT"),
-    "planner_mode_f32": GroupSpec("Planner Mode (f32)", "Heuristic"),
-    "planner_mode_f64": GroupSpec("Planner Mode (f64)", "Heuristic"),
-    "kernel_bit_reversal_f32": GroupSpec("Bit Reversal (f32)", "COBRA"),
-    "kernel_bit_reversal_f64": GroupSpec("Bit Reversal (f64)", "COBRA"),
+    "c2c_forward_f32": GroupSpec("C2C Forward (f32)", "phastft"),
+    "c2c_forward_f64": GroupSpec("C2C Forward (f64)", "phastft"),
+    "c2c_inverse_f32": GroupSpec("C2C Inverse (f32)", "phastft"),
+    "c2c_inverse_f64": GroupSpec("C2C Inverse (f64)", "phastft"),
+    "r2c_f32": GroupSpec("R2C (f32)", "phastft"),
+    "r2c_f64": GroupSpec("R2C (f64)", "phastft"),
+    "c2r_f32": GroupSpec("C2R (f32)", "phastft"),
+    "c2r_f64": GroupSpec("C2R (f64)", "phastft"),
+    "planner_f32": GroupSpec("Planner (f32)", "phastft"),
+    "planner_f64": GroupSpec("Planner (f64)", "phastft"),
+    "planner_mode_f32": GroupSpec("Planner Mode (f32)", "heuristic"),
+    "planner_mode_f64": GroupSpec("Planner Mode (f64)", "heuristic"),
+    "kernel_bit_reversal_f32": GroupSpec("Bit Reversal (f32)", "cobra"),
+    "kernel_bit_reversal_f64": GroupSpec("Bit Reversal (f64)", "cobra"),
     "kernel_deinterleave_f32": GroupSpec("Deinterleave (f32)", None),
     "kernel_deinterleave_f64": GroupSpec("Deinterleave (f64)", None),
     "kernel_combine_re_im_f32": GroupSpec("Combine Re/Im (f32)", None),
@@ -103,34 +103,32 @@ GROUPS: dict[str, GroupSpec] = {
 }
 
 # Series styling. Color is the canonical Okabe-Ito assignment per series;
-# sort_index pins left-to-right bar order (lower = leftmost). PhastFT R2C/C2R
-# reuse the PhastFT DIT orange and `realfft` reuses the RustFFT blue — they
+# sort_index pins left-to-right bar order (lower = leftmost). PhastFT
+# blue and `realfft` reuses the RustFFT orange — they
 # live in disjoint groups so the colors never collide on a single chart.
 SERIES_REGISTRY: dict[str, tuple[str, int]] = {
-    "RustFFT": ("#0072B2", 0),
-    "realfft": ("#0072B2", 0),
-    "PhastFT DIT": ("#D55E00", 1),
-    "PhastFT R2C": ("#D55E00", 1),
-    "PhastFT C2R": ("#D55E00", 1),
-    "FFTW Estimate C2C": ("#009E73", 2),
-    "FFTW Measure C2C": ("#E69F00", 3),
-    "FFTW Conserve C2C": ("#CC79A7", 4),
-    "FFTW Estimate R2C": ("#009E73", 2),
-    "FFTW Measure R2C": ("#E69F00", 3),
-    "FFTW Conserve R2C": ("#CC79A7", 4),
-    "FFTW Estimate C2R": ("#009E73", 2),
-    "FFTW Measure C2R": ("#E69F00", 3),
-    "FFTW Conserve C2R": ("#CC79A7", 4),
-    "FFTW Estimate R2R": ("#009E73", 5),
-    "FFTW Measure R2R": ("#E69F00", 6),
-    "FFTW Conserve R2R": ("#CC79A7", 7),
-    "Heuristic": ("#0072B2", 0),
-    "Tune": ("#D55E00", 1),
-    "BRAVO": ("#0072B2", 0),
-    "COBRAVO": ("#D55E00", 1),
-    "COBRA": ("#009E73", 2),
-    "Elaan": ("#E69F00", 3),
-    "Naive BR": ("#CC79A7", 4),
+    "phastft": ("#0072B2", 0),
+    "rustfft": ("#D55E00", 1),
+    "realfft": ("#D55E00", 1),
+    "fftw_estimate_c2c": ("#009E73", 2),
+    "fftw_measure_c2c": ("#E69F00", 3),
+    "fftw_conserve_c2c": ("#CC79A7", 4),
+    "fftw_estimate_r2c": ("#009E73", 2),
+    "fftw_measure_r2c": ("#E69F00", 3),
+    "fftw_conserve_r2c": ("#CC79A7", 4),
+    "fftw_estimate_c2r": ("#009E73", 2),
+    "fftw_measure_c2r": ("#E69F00", 3),
+    "fftw_conserve_c2r": ("#CC79A7", 4),
+    "fftw_estimate_r2r": ("#009E73", 5),
+    "fftw_measure_r2r": ("#E69F00", 6),
+    "fftw_conserve_r2r": ("#CC79A7", 7),
+    "heuristic": ("#0072B2", 0),
+    "tune": ("#D55E00", 1),
+    "bravo": ("#0072B2", 0),
+    "cobravo": ("#D55E00", 1),
+    "cobra": ("#009E73", 2),
+    "elaan": ("#E69F00", 3),
+    "naive_br": ("#CC79A7", 4),
     "deinterleave": ("#D55E00", 0),
     "combine_re_im": ("#D55E00", 0),
 }
@@ -427,10 +425,7 @@ def plot_group(
     max_sizes = max(1, max_bars // active)
     n_plots = math.ceil(len(sizes) / max_sizes)
     chunk_size = math.ceil(len(sizes) / n_plots)
-    halves = [
-        sizes[i:i + chunk_size]
-        for i in range(0, len(sizes), chunk_size)
-    ]
+    halves = [sizes[i : i + chunk_size] for i in range(0, len(sizes), chunk_size)]
 
     for half in halves:
         if not half:
@@ -484,7 +479,7 @@ def main(argv: Iterable[str] | None = None) -> int:
         default=None,
         help=(
             "Series whose median normalizes every other series. If unset, "
-            "each group uses its GROUP_DEFAULTS entry (RustFFT for complex, "
+            "each group uses its GROUP_DEFAULTS entry (rustfft for complex, "
             "realfft for R2C/C2R, etc.); explicit value applies to every "
             "group."
         ),

@@ -32,7 +32,7 @@ macro_rules! phastft_c2c {
                 |g, len| {
                     let opts = Options::guess_options(len);
                     let planner = <$planner>::new(len);
-                    g.bench_function(BenchmarkId::new(ids::PHASTFT_DIT, len), |b| {
+                    g.bench_function(BenchmarkId::new(ids::PHASTFT, len), |b| {
                         b.iter_batched(
                             || split_complex::<$float>(len),
                             |(mut reals, mut imags)| {
@@ -57,7 +57,7 @@ macro_rules! phastft_r2c {
                 let phast_opts = Options::guess_options(len / 2);
                 let mut phast_re = vec![0 as $float; len / 2 + 1];
                 let mut phast_im = vec![0 as $float; len / 2 + 1];
-                g.bench_function(BenchmarkId::new(ids::PHASTFT_R2C, len), |b| {
+                g.bench_function(BenchmarkId::new(ids::PHASTFT, len), |b| {
                     b.iter_batched(
                         || real_signal::<$float>(len),
                         |input| {
@@ -87,7 +87,7 @@ macro_rules! phastft_c2r {
                 let mut phast_output = vec![0 as $float; len];
                 let mut phast_scratch_re = vec![0 as $float; len / 2];
                 let mut phast_scratch_im = vec![0 as $float; len / 2];
-                g.bench_function(BenchmarkId::new(ids::PHASTFT_C2R, len), |b| {
+                g.bench_function(BenchmarkId::new(ids::PHASTFT, len), |b| {
                     b.iter_batched(
                         || spectrum_split::<$float>(len),
                         |(input_re, input_im)| {
