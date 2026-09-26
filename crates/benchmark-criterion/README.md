@@ -112,13 +112,6 @@ Group names are **snake_case** with category prefixes:
 - `kernel_*` — internal SIMD kernels (`kernel_bit_reversal_f64`,
   `kernel_combine_re_im_f32`), distinct from full-pipeline FFT benches.
 
-snake_case lets names round-trip cleanly through criterion's filename
-sanitizer (which rewrites `?"/\*<>:|^` to `_`), survive shell argument
-parsing without quoting, and tab-complete. Series IDs (`PhastFT DIT`,
-`RustFFT`, `FFTW Estimate`, …) stay PascalCase since they only appear
-as `--baseline` arguments. The overlay script humanizes group names at
-plot time — chart titles read "C2C Forward (f32)".
-
 Size sweeps (`LENGTHS`, `BIT_REVERSAL_LENGTHS`, `PLANNER_MODE_LENGTHS`),
 sample-distribution helpers (`split_complex` / `interleaved_complex` /
 `real_signal` / `spectrum_*`), throughput helpers (`throughput_complex` /
@@ -128,4 +121,4 @@ touch one file. `bench_at_sizes` takes the throughput function as an
 argument, so each bench file picks its data layout (split vs.
 interleaved) independently of the throughput accounting (paired vs.
 single scalar). The shared bench body lives in
-`benches/backend/{crate_name}_lib/mod.rs` .
+`src/backend/{crate_name}_lib/mod.rs`.
