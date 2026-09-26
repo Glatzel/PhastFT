@@ -69,7 +69,7 @@ after running the five complex benches:
 ```bash
 uv run benches/plot_criterion_overlay.py                              # all groups, per-group default baselines
 uv run benches/plot_criterion_overlay.py --groups c2c_forward_f32     # filter (snake_case, no quoting)
-uv run benches/plot_criterion_overlay.py --baseline "PhastFT DIT"     # global baseline override
+uv run benches/plot_criterion_overlay.py --baseline "phastft"     # global baseline override
 uv run benches/plot_criterion_overlay.py --out-dir target/overlays    # write elsewhere
 ```
 
@@ -77,9 +77,9 @@ The script walks `target/criterion/<group>/<id>/<size>/new/{sample,benchmark}.js
 and emits `criterion_overlay_<group>_<log2_lo>_<log2_hi>.svg` —
 two files per group (small-N and large-N halves split at the size
 list's midpoint). The `GROUPS` registry in the script holds both the
-humanized title and per-group default baseline (`RustFFT` for the
-`c2c_*` groups, `realfft` for `r2c_*` / `c2r_*`, `Heuristic` for
-`planner_mode_*`, `COBRA` for `kernel_bit_reversal_*`). Groups on disk
+humanized title and per-group default baseline (`rustfft` for the
+`c2c_*` groups, `realfft` for `r2c_*` / `c2r_*`, `heuristic` for
+`planner_mode_*`, `cobra` for `kernel_bit_reversal_*`). Groups on disk
 that aren't in the registry get a loud warning and are skipped — better
 to surface the gap than to silently normalize against a guessed
 baseline. PEP 723 inline metadata means `uv run` fetches matplotlib /
@@ -126,9 +126,8 @@ Group names are **snake_case** with category prefixes:
 
 snake_case lets names round-trip cleanly through criterion's filename
 sanitizer (which rewrites `?"/\*<>:|^` to `_`), survive shell argument
-parsing without quoting, and tab-complete. Series IDs (`PhastFT DIT`,
-`RustFFT`, `FFTW Estimate`, …) stay PascalCase since they only appear
-as `--baseline` arguments. The overlay script humanizes group names at
+parsing without quoting, and tab-complete. Series IDs (`phastft`,
+`rustfft`, …) also stay snake_case. The overlay script humanizes group names at
 plot time — chart titles read "C2C Forward (f32)".
 
 Size sweeps (`LENGTHS`, `BIT_REVERSAL_LENGTHS`, `PLANNER_MODE_LENGTHS`),
