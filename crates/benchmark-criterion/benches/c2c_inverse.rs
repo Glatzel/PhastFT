@@ -17,14 +17,10 @@
 //! `benches/plot_criterion_overlay.py` to produce a single overlay plot per
 //! group after running them all.
 
+use benchmark_criterion::backend::fftw_lib::fftw_c2c_inv_all;
+use benchmark_criterion::backend::phastft_lib::{phastft_c2c_inv_f32, phastft_c2c_inv_f64};
+use benchmark_criterion::backend::rustfft_lib::{rustfft_inv_f32, rustfft_inv_f64};
 use criterion::{criterion_group, criterion_main};
-
-use crate::backend::fftw_lib::fftw_c2c_inv_all;
-use crate::backend::phastft_lib::{phastft_c2c_inv_f32, phastft_c2c_inv_f64};
-use crate::backend::rustfft_lib::{rustfft_inv_f32, rustfft_inv_f64};
-
-mod backend;
-mod common;
 
 criterion_group!(
     benches,

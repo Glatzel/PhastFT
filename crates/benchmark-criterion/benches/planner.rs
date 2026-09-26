@@ -1,9 +1,7 @@
+use benchmark_criterion::common::{bench_at_sizes, groups, ids, throughput_complex, LENGTHS};
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
 use phastft::planner::{PlannerDit32, PlannerDit64};
 use utilities::rustfft::FftPlanner;
-
-mod common;
-use common::{bench_at_sizes, groups, ids, throughput_complex, LENGTHS};
 
 macro_rules! planner_bench {
     ($name:ident, $float:ty, $planner:ty, $group:expr) => {

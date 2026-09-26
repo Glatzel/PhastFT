@@ -5,13 +5,11 @@
 //! cargo bench --bench interleave --features bench-internals
 //! ```
 
-use criterion::{criterion_group, criterion_main, BatchSize, BenchmarkId, Criterion};
-use phastft::complex_nums::{combine_re_im, deinterleave_complex32, deinterleave_complex64};
-
-mod common;
-use common::{
+use benchmark_criterion::common::{
     bench_at_sizes, groups, ids, interleaved_complex, split_complex, throughput_complex, LENGTHS,
 };
+use criterion::{criterion_group, criterion_main, BatchSize, BenchmarkId, Criterion};
+use phastft::complex_nums::{combine_re_im, deinterleave_complex32, deinterleave_complex64};
 
 macro_rules! deinterleave_bench {
     ($name:ident, $float:ty, $deinter_fn:ident, $group:expr) => {

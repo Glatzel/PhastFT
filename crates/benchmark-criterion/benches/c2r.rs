@@ -2,9 +2,8 @@
 //! not a good fit for measuring long-running tasks — see
 //! `examples/benchmark.rs` for the harness for large sizes.
 //!
-//! This benchmark compares real-to-complex (R2C) FFT execution across
-//! PhastFT, realfft, and FFTW, and real-to-real (R2R) FFT execution across
-//! PhastFT and FFTW, for `f32` and `f64` where supported.
+//! This benchmark compares complex-to-real (C2R) FFT execution across
+//! PhastFT, realfft, and FFTW for `f32` and `f64` where supported.
 //!
 //! FFTW is benchmarked with `ESTIMATE`, `MEASURE`, and `CONSERVE_MEMORY`
 //! planning modes. FFTW wisdom is explicitly cleared between each mode so
@@ -17,21 +16,17 @@
 //! `benches/plot_criterion_overlay.py` to produce a single overlay plot per
 //! group after running them all.
 
+use benchmark_criterion::backend::fftw_lib::fftw_c2r_all;
+use benchmark_criterion::backend::phastft_lib::{phastft_c2r_f32, phastft_c2r_f64};
+use benchmark_criterion::backend::realfft_lib::{realfft_c2r_f32, realfft_c2r_f64};
 use criterion::{criterion_group, criterion_main};
-
-use crate::backend::fftw_lib::fftw_r2c_all;
-use crate::backend::phastft_lib::{phastft_r2c_f32, phastft_r2c_f64};
-use crate::backend::realfft_lib::{realfft_r2c_f32, realfft_r2c_f64};
-
-mod backend;
-mod common;
 
 criterion_group!(
     benches,
-    phastft_r2c_f32,
-    phastft_r2c_f64,
-    realfft_r2c_f32,
-    realfft_r2c_f64,
-    fftw_r2c_all
+    phastft_c2r_f32,
+    phastft_c2r_f64,
+    realfft_c2r_f32,
+    realfft_c2r_f64,
+    fftw_c2r_all
 );
 criterion_main!(benches);

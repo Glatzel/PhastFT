@@ -1,0 +1,15 @@
+[package]
+name = "benchmark-shell"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+fftw.workspace = true
+phastft = { workspace = true, default-features = false, features = ["bench-internals", "complex-nums"] }
+rustfft.workspace = true
+
+[features]
+default = ["parallel"]
+parallel = ["phastft/parallel"]

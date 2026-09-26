@@ -1,12 +1,12 @@
+use benchmark_criterion::common::{
+    bench_at_sizes, groups, ids, throughput_real, BIT_REVERSAL_LENGTHS,
+};
+use benchmark_criterion::legacy_bitrev;
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
 use fearless_simd::{dispatch, Level};
 use phastft::algorithms::bravo::{bit_rev_bravo_f32, bit_rev_bravo_f64};
 use rand::distr::StandardUniform;
 use rand::prelude::*;
-
-mod common;
-mod legacy_bitrev;
-use common::{bench_at_sizes, groups, ids, throughput_real, BIT_REVERSAL_LENGTHS};
 
 fn random_vec<T>(n: usize) -> Vec<T>
 where

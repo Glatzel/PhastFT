@@ -19,12 +19,10 @@
 
 use criterion::{criterion_group, criterion_main};
 
-use crate::backend::fftw_lib::fftw_c2c_fwd_all;
-use crate::backend::phastft_lib::{phastft_c2c_fwd_f32, phastft_c2c_fwd_f64};
-use crate::backend::rustfft_lib::{rustfft_fwd_f32, rustfft_fwd_f64};
+use benchmark_criterion::backend::fftw_lib::fftw_c2c_fwd_all;
+use benchmark_criterion::backend::phastft_lib::{phastft_c2c_fwd_f32, phastft_c2c_fwd_f64};
+use benchmark_criterion::backend::rustfft_lib::{rustfft_fwd_f32, rustfft_fwd_f64};
 
-mod backend;
-mod common;
 
 criterion_group!(
     benches,
