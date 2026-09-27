@@ -15,7 +15,10 @@
     reason = "Functions are shared across targets, but not every target uses all of them."
 )]
 
+#[cfg(feature = "fftw")]
 pub mod fftw_lib;
 pub mod phastft_lib;
+#[cfg(feature = "realfft")]
 pub mod realfft_lib;
+#[cfg(feature = "rustfft")]
 pub mod rustfft_lib;

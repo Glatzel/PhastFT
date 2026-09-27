@@ -95,7 +95,7 @@ jobs:
       - name: Build docs
         env:
           RUSTDOCFLAGS: "-D warnings"
-        run: cargo doc --all-features --no-deps
+        run: cargo doc -p phastft --all-features --no-deps
 
   coverage:
     runs-on: ubuntu-latest

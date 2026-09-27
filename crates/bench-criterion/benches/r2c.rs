@@ -16,9 +16,10 @@
 //! auto-aggregate across binaries, so use
 //! `benches/plot_criterion_overlay.py` to produce a single overlay plot per
 //! group after running them all.
-
+#[cfg(feature = "fftw")]
 use benchmark_criterion::backend::fftw_lib::fftw_r2c_all;
 use benchmark_criterion::backend::phastft_lib::{phastft_r2c_f32, phastft_r2c_f64};
+#[cfg(feature = "realfft")]
 use benchmark_criterion::backend::realfft_lib::{realfft_r2c_f32, realfft_r2c_f64};
 use criterion::{criterion_group, criterion_main};
 

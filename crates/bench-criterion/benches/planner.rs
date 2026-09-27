@@ -15,6 +15,7 @@ macro_rules! planner_bench {
                     g.bench_function(BenchmarkId::new(ids::PHASTFT, len), |b| {
                         b.iter(|| <$planner>::new(len));
                     });
+                    #[cfg(feature = "rustfft")]
                     g.bench_function(BenchmarkId::new(ids::RUSTFFT, len), |b| {
                         b.iter(|| {
                             let mut planner = FftPlanner::<$float>::new();
