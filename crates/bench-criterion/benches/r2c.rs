@@ -21,14 +21,19 @@ use benchmark_criterion::backend::fftw_lib::fftw_r2c_all;
 use benchmark_criterion::backend::phastft_lib::{phastft_r2c_f32, phastft_r2c_f64};
 #[cfg(feature = "realfft")]
 use benchmark_criterion::backend::realfft_lib::{realfft_r2c_f32, realfft_r2c_f64};
-use criterion::{criterion_group, criterion_main};
+use criterion::criterion_main;
 
-criterion_group!(
-    benches,
-    phastft_r2c_f32,
-    phastft_r2c_f64,
-    realfft_r2c_f32,
-    realfft_r2c_f64,
-    fftw_r2c_all
-);
+#[doc = "The function which runs the benchmarks."]
+pub fn benches() {
+    let mut criterion: criterion::Criterion<_> =
+        (criterion::Criterion::default()).configure_from_args();
+    phastft_r2c_f32(&mut criterion);
+    phastft_r2c_f64(&mut criterion);
+    #[cfg(feature = "realfft")]
+    realfft_r2c_f32(&mut criterion);
+    #[cfg(feature = "realfft")]
+    realfft_r2c_f64(&mut criterion);
+    #[cfg(feature = "fftw")]
+    fftw_r2c_all(&mut criterion);
+}
 criterion_main!(benches);

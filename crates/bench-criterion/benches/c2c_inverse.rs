@@ -21,14 +21,19 @@ use benchmark_criterion::backend::fftw_lib::fftw_c2c_inv_all;
 use benchmark_criterion::backend::phastft_lib::{phastft_c2c_inv_f32, phastft_c2c_inv_f64};
 #[cfg(feature = "rustfft")]
 use benchmark_criterion::backend::rustfft_lib::{rustfft_inv_f32, rustfft_inv_f64};
-use criterion::{criterion_group, criterion_main};
+use criterion::criterion_main;
 
-criterion_group!(
-    benches,
-    phastft_c2c_inv_f32,
-    phastft_c2c_inv_f64,
-    rustfft_inv_f32,
-    rustfft_inv_f64,
-    fftw_c2c_inv_all
-);
+#[doc = "The function which runs the benchmarks."]
+pub fn benches() {
+    let mut criterion: criterion::Criterion<_> =
+        (criterion::Criterion::default()).configure_from_args();
+    phastft_c2c_inv_f32(&mut criterion);
+    phastft_c2c_inv_f64(&mut criterion);
+    #[cfg(feature = "rustfft")]
+    rustfft_inv_f32(&mut criterion);
+    #[cfg(feature = "rustfft")]
+    rustfft_inv_f64(&mut criterion);
+    #[cfg(feature = "fftw")]
+    fftw_c2c_inv_all(&mut criterion);
+}
 criterion_main!(benches);
