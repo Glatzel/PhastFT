@@ -1,6 +1,6 @@
 # Profiling
 
-From the this directory:
+From **repo root**:
 
 ```bash
 # Linux: open access to performance monitoring

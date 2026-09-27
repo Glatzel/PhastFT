@@ -27,9 +27,9 @@ Benchmarking platform:
 
 ### Steps to Reproduce
 
-From the repo root, run the following:
+From the **repo root**, run the following:
 ```sh
-cargo bench --bench bit_reversal
+cargo bench --profile bench --bench bit_reversal
 ```
 
 ### Render the plots

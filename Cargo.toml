@@ -5,7 +5,8 @@ members = [
   "./crates/benchmark-shell/",
   "./crates/phastft/",
   "./crates/profile/",
-  "./crates/pyphastft/",
+  # temporary disable pyphastft before it is avalable
+  # "./crates/pyphastft/",
   "./crates/utilities/",
 ]
 
@@ -33,7 +34,7 @@ phastft = { path = "./crates/phastft/" }
 utilities = { path = "./crates/utilities/" }
 
 bytemuck = { version = "1.25.0" }
-criterion  = "0.8.2"
+criterion = "0.8.2"
 fearless_simd = "0.5.0"
 fftw = "0.8.0"
 fftw-sys = "0.8.0"

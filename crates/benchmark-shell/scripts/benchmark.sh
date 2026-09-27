@@ -37,9 +37,9 @@ mkdir -p \
 echo "[build] cargo build --profile bench --examples"
 (cd .. && cargo build --profile bench --examples)
 
-PHASTFT_BIN=../target/release/examples/benchmark
-RUSTFFT_BIN=../target/release/examples/rustfft
-FFTWRB_BIN=../target/release/examples/fftwrb
+PHASTFT_BIN=../target/bench/benchmark
+RUSTFFT_BIN=../target/bench/rustfft
+FFTWRB_BIN=../target/bench/fftwrb
 
 echo "[run] precision=f${precision} budget_ns=${budget_ns}"
 
