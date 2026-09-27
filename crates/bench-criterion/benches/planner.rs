@@ -1,7 +1,6 @@
 use benchmark_criterion::common::{bench_at_sizes, groups, ids, throughput_complex, LENGTHS};
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
 use phastft::planner::{PlannerDit32, PlannerDit64};
-use utilities::rustfft::FftPlanner;
 
 macro_rules! planner_bench {
     ($name:ident, $float:ty, $planner:ty, $group:expr) => {
@@ -18,7 +17,7 @@ macro_rules! planner_bench {
                     #[cfg(feature = "rustfft")]
                     g.bench_function(BenchmarkId::new(ids::RUSTFFT, len), |b| {
                         b.iter(|| {
-                            let mut planner = FftPlanner::<$float>::new();
+                            let mut planner = utilities::rustfft::FftPlanner::<$float>::new();
                             planner.plan_fft_forward(len)
                         });
                     });
