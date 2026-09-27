@@ -6,5 +6,5 @@ From **repo root**:
 # Linux: open access to performance monitoring
 echo -1 | sudo tee /proc/sys/kernel/perf_event_paranoid
 
-./profile.sh
+./crates/bench-profile/profile.sh
 ```

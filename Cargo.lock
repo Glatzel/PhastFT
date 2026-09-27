@@ -77,6 +77,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2af50177e190e07a26ab74f8b1efbfe2ef87da2116221318cb1c2e82baf7de06"
 
 [[package]]
+name = "bench-shell"
+version = "0.4.1"
+dependencies = [
+ "fftw",
+ "phastft",
+ "rustfft",
+ "utilities",
+]
+
+[[package]]
 name = "benchmark-criterion"
 version = "0.4.1"
 dependencies = [
@@ -88,16 +98,6 @@ dependencies = [
  "phastft",
  "rand",
  "realfft",
- "rustfft",
- "utilities",
-]
-
-[[package]]
-name = "benchmark-shell"
-version = "0.4.1"
-dependencies = [
- "fftw",
- "phastft",
  "rustfft",
  "utilities",
 ]

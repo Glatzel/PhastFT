@@ -20,7 +20,7 @@ Run from the **this directory**:
 or run from the **repo root**:
 
 ```bash
-./crates/benchmark-shell/scripts/benchmark.sh <n-lower-bound> <n-upper-bound>
+./crates/bench-shell/scripts/benchmark.sh <n-lower-bound> <n-upper-bound>
 ```
 
 Each size's iteration count is derived from an N·log2(N) cost model
@@ -49,7 +49,7 @@ benchmark-data.YYYY.MM.DD.HH-MM-SS/
 run from the **repo root**:
 
 ```bash
-uv run ./crates/benchmark-shell/scripts/benchmark_plots.py
+uv run ./crates/bench-shell/scripts/benchmark_plots.py
 ```
 
 `benchmark_plots.py` uses PEP 723 inline script metadata, so `uv run`

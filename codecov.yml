@@ -6,3 +6,7 @@ coverage:
 
     patch: false
     changes: false
+ignore:
+  - "path/to/folder"  # ignore folders and all its contents
+  - "test_.*.rb"       # regex accepted
+  - "**/*.py"         # glob accepted

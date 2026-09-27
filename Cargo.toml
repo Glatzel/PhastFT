@@ -1,10 +1,10 @@
 [workspace]
 resolver = "3"
 members = [
-  "./crates/benchmark-criterion/",
-  "./crates/benchmark-shell/",
+  "./crates/bench-criterion/",
+  "./crates/bench-profile/",
+  "./crates/bench-shell/",
   "./crates/phastft/",
-  "./crates/profile/",
   # temporary disable pyphastft before it is avalable
   # "./crates/pyphastft/",
   "./crates/utilities/",

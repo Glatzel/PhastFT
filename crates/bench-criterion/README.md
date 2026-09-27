@@ -55,10 +55,10 @@ last bench to run clobbers the overlay. Use the overlay aggregator
 after running the five complex benches from **repo root**:
 
 ```bash
-uv run crates/benchmark-criterion/scripts/plot_criterion_overlay.py                              # all groups, per-group default baselines
-uv run crates/benchmark-criterion/scripts/plot_criterion_overlay.py --groups c2c_forward_f32     # filter (snake_case, no quoting)
-uv run crates/benchmark-criterion/scripts/plot_criterion_overlay.py --baseline "phastft"         # global baseline override
-uv run crates/benchmark-criterion/scripts/plot_criterion_overlay.py --out-dir target/overlays    # write elsewhere
+uv run crates/bench-criterion/scripts/plot_criterion_overlay.py                              # all groups, per-group default baselines
+uv run crates/bench-criterion/scripts/plot_criterion_overlay.py --groups c2c_forward_f32     # filter (snake_case, no quoting)
+uv run crates/bench-criterion/scripts/plot_criterion_overlay.py --baseline "phastft"         # global baseline override
+uv run crates/bench-criterion/scripts/plot_criterion_overlay.py --out-dir target/overlays    # write elsewhere
 ```
 
 The script walks `target/criterion/<group>/<id>/<size>/new/{sample,benchmark}.json`

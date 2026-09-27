@@ -1,5 +1,5 @@
 [package]
-name = "benchmark-shell"
+name = "bench-shell"
 version.workspace = true
 authors.workspace = true
 edition.workspace = true
