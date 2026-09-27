@@ -24,7 +24,9 @@ use utilities::rustfft::num_complex::Complex;
 /// Default power-of-2 size sweep (log2). Every cross-library and
 /// PhastFT-internal FFT group iterates this list unless it provides a
 /// reason to override (see `BIT_REVERSAL_LENGTHS`, `PLANNER_MODE_LENGTHS`).
-pub const LENGTHS: &[usize] = &[6];
+pub const LENGTHS: &[usize] = &[
+    6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
+];
 
 /// Bit-reversal kernel only kicks in at `n >= 10` (the SIMD path needs at
 /// least one full `LANES * LANES` chunk), so it has its own floor.
