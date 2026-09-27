@@ -20,7 +20,7 @@ macro_rules! rustfft_c2c {
             bench_at_sizes(
                 c,
                 $group,
-                LENGTHS,
+                &LENGTHS,
                 throughput_complex::<$float>,
                 |g, len| {
                     // Plan and scratch are constructed outside iter_batched so

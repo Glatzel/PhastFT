@@ -124,7 +124,7 @@ macro_rules! sweep_c2c {
             bench_at_sizes(
                 c,
                 $group,
-                LENGTHS,
+                &LENGTHS,
                 throughput_complex::<$float>,
                 move |g, len| {
                     let plan = <$plan>::aligned(&[len], $sign, mode.flags()).unwrap();
@@ -154,7 +154,7 @@ macro_rules! sweep_r2c {
             bench_at_sizes(
                 c,
                 $group,
-                LENGTHS,
+                &LENGTHS,
                 throughput_real::<$float>,
                 move |g, len| {
                     let plan = <$plan>::aligned(&[len], mode.flags()).unwrap();
@@ -182,7 +182,7 @@ macro_rules! sweep_c2r {
             bench_at_sizes(
                 c,
                 $group,
-                LENGTHS,
+                &LENGTHS,
                 throughput_real::<$float>,
                 move |g, len| {
                     let plan = <$plan>::aligned(&[len], mode.flags()).unwrap();
@@ -213,7 +213,7 @@ macro_rules! sweep_r2r {
             bench_at_sizes(
                 c,
                 $group,
-                LENGTHS,
+                &LENGTHS,
                 throughput_real::<$float>,
                 move |g, len| {
                     // R2R has no `Sign`: the kind (R2HC, HC2R, ...) says it all.

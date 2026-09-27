@@ -16,7 +16,7 @@ use crate::common::{
 macro_rules! realfft_r2c {
     ($name:ident, $float:ty, $planner:ty, $fft_fn:ident, $group:expr) => {
         pub fn $name(c: &mut Criterion) {
-            bench_at_sizes(c, $group, LENGTHS, throughput_real::<$float>, |g, len| {
+            bench_at_sizes(c, $group, &LENGTHS, throughput_real::<$float>, |g, len| {
                 let mut rf_planner = RealFftPlanner::<$float>::new();
                 let rf_r2c = rf_planner.plan_fft_forward(len);
                 let mut rf_output = rf_r2c.make_output_vec();
@@ -41,7 +41,7 @@ macro_rules! realfft_r2c {
 macro_rules! realfft_c2r {
     ($name:ident, $float:ty, $planner:ty, $fft_fn:ident, $group:expr) => {
         pub fn $name(c: &mut Criterion) {
-            bench_at_sizes(c, $group, LENGTHS, throughput_real::<$float>, |g, len| {
+            bench_at_sizes(c, $group, &LENGTHS, throughput_real::<$float>, |g, len| {
                 let mut rf_planner = RealFftPlanner::<$float>::new();
                 let rf_c2r = rf_planner.plan_fft_inverse(len);
                 let mut rf_output = rf_c2r.make_output_vec();

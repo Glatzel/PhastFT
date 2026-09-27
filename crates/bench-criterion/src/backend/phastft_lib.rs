@@ -27,7 +27,7 @@ macro_rules! phastft_c2c {
             bench_at_sizes(
                 c,
                 $group,
-                LENGTHS,
+                &LENGTHS,
                 throughput_complex::<$float>,
                 |g, len| {
                     let opts = Options::guess_options(len);
@@ -50,7 +50,7 @@ macro_rules! phastft_c2c {
 macro_rules! phastft_r2c {
     ($name:ident, $float:ty, $planner:ty, $fft_fn:ident, $group:expr) => {
         pub fn $name(c: &mut Criterion) {
-            bench_at_sizes(c, $group, LENGTHS, throughput_real::<$float>, |g, len| {
+            bench_at_sizes(c, $group, &LENGTHS, throughput_real::<$float>, |g, len| {
                 // Plan + output buffers allocated outside iter_batched —
                 // planning and allocation cost is excluded from per-sample timings.
                 let phast_planner = <$planner>::new(len);
@@ -81,7 +81,7 @@ macro_rules! phastft_r2c {
 macro_rules! phastft_c2r {
     ($name:ident, $float:ty, $planner:ty, $fft_fn:ident, $group:expr) => {
         pub fn $name(c: &mut Criterion) {
-            bench_at_sizes(c, $group, LENGTHS, throughput_real::<$float>, |g, len| {
+            bench_at_sizes(c, $group, &LENGTHS, throughput_real::<$float>, |g, len| {
                 let phast_planner = <$planner>::new(len);
                 let phast_opts = Options::guess_options(len / 2);
                 let mut phast_output = vec![0 as $float; len];

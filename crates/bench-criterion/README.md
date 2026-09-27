@@ -10,21 +10,41 @@ for PhastFT internals and cross-library comparisons against
 Run from the **repo root** or **this directory**:
 
 ```bash
-cargo bench --bench <name>                 # one bench target
-cargo bench --all-features                 # every target
+cargo bench --bench <name>                                        # one bench target
+cargo bench --all-features                                        # every target
+cargo bench --bench c2c --no-default-features --feature rustfft   # only run C2C target and disable other fft crates expept rustfft
+LENGTHS=10,12,14,16 cargo bench --bench <name>                    # one bench target and override input length
 ```
 
-| Bench target   |  Coverage                                                                                                              |
-| -------------- |  --------------------------------------------------------------------------------------------------------------------- |
-| `c2c_forward`  |  PhastFT complex FFT (`fft_{32,64}_dit_with_planner_and_opts`) vs. RustFFT vs. FFTW C2C — forward , f32 + f64.         |
-| `c2c_inverse`  |  PhastFT complex FFT (`fft_{32,64}_dit_with_planner_and_opts`) vs. RustFFT vs. FFTW C2C — inverse , f32 + f64.         |
-| `r2c`          |  PhastFT R2C (`r2c_fft_*`) vs. the `realfft` crate vs. FFTW R2C vs. FFTW R2R — forward , f32 + f64.                    |
-| `c2r`          |  PhastFT R2C (`c2r_fft_*`) vs. the `realfft` crate vs. FFTW C2C vs. FFTW R2R — inverse , f32 + f64.                    |
-| `planner`      |  Planner construction cost (`PlannerDit{32,64}::new` vs. RustFFT's `FftPlanner::plan_fft_forward`).                    |
-| `interleave`   |  Internal SIMD interleave / deinterleave kernels.                                                                      |
-| `bit_reversal` |  Five bit-reversal kernels head-to-head — CO-BRAVO, BRAVO, COBRA, Elaan, Naive ([`BIT_REVERSAL.md`](BIT_REVERSAL.md)). |
+| Bench target   | Coverage                                                                                                              |
+| -------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `c2c_forward`  | PhastFT complex FFT (`fft_{32,64}_dit_with_planner_and_opts`) vs. RustFFT vs. FFTW C2C — forward , f32 + f64.         |
+| `c2c_inverse`  | PhastFT complex FFT (`fft_{32,64}_dit_with_planner_and_opts`) vs. RustFFT vs. FFTW C2C — inverse , f32 + f64.         |
+| `r2c`          | PhastFT R2C (`r2c_fft_*`) vs. the `realfft` crate vs. FFTW R2C vs. FFTW R2R — forward , f32 + f64.                    |
+| `c2r`          | PhastFT R2C (`c2r_fft_*`) vs. the `realfft` crate vs. FFTW C2C vs. FFTW R2R — inverse , f32 + f64.                    |
+| `planner`      | Planner construction cost (`PlannerDit{32,64}::new` vs. RustFFT's `FftPlanner::plan_fft_forward`).                    |
+| `interleave`   | Internal SIMD interleave / deinterleave kernels.                                                                      |
+| `bit_reversal` | Five bit-reversal kernels head-to-head — CO-BRAVO, BRAVO, COBRA, Elaan, Naive ([`BIT_REVERSAL.md`](BIT_REVERSAL.md)). |
 
-### Benchmark organization
+| Features   | Default | Description                            |
+| ---------- | ------- | -------------------------------------- |
+| `fftw`     | enabled | Enable `fftw` crate.                   |
+| `parallel` | enabled | Enable `phastft`'s `parallel` feature. |
+| `realfft`  | enabled | Enable `realfft` crate.                |
+| `rustfft`  | enabled | Enable `rustfft` crate.                |
+
+The following environment variables can be used to override benchmark
+configuration values. For more details about these variables and their
+default values, see `src/common.rs`.
+
+| Env Variable           | Effected Target                           | Example                      |
+| ---------------------- | ----------------------------------------- | ---------------------------- |
+| `LENGTHS`              | `c2c_forward`, `c2c_inverse`, `r2c`,`c2r` | `LENGTHS=6,7,8`              |
+| `BIT_REVERSAL_LENGTHS` | `bit_reversal`                            | `BIT_REVERSAL_LENGTHS=10,11` |
+| `PLANNER_MODE_LENGTHS` | `planner`                                 | `PLANNER_MODE_LENGTHS=5,6`   |
+| `SAMPLE_SIZE`          | All                                       | `SAMPLE_SIZE=50`             |
+
+## Benchmark organization
 
 The benchmark suite is split into four binaries by FFT transform type and
 direction: `c2c_forward`, `c2c_inverse`, `r2c`, and `c2r`. Each binary

@@ -12,6 +12,9 @@
 //! sanitizer.
 #![allow(dead_code)]
 
+use std::env;
+use std::sync::LazyLock;
+
 use criterion::measurement::WallTime;
 use criterion::{BenchmarkGroup, Criterion, PlotConfiguration, Throughput};
 use num_traits::Float;
@@ -21,25 +24,63 @@ use rand::rngs::SmallRng;
 use rand::RngExt;
 use utilities::rustfft::num_complex::Complex;
 
+fn parse_lengths(var: &str, default: &[usize]) -> Vec<usize> {
+    match env::var(var) {
+        Ok(value) => value
+            .split(',')
+            .filter_map(|v| v.trim().parse().ok())
+            .collect(),
+        Err(_) => default.to_vec(),
+    }
+}
 /// Default power-of-2 size sweep (log2). Every cross-library and
 /// PhastFT-internal FFT group iterates this list unless it provides a
 /// reason to override (see `BIT_REVERSAL_LENGTHS`, `PLANNER_MODE_LENGTHS`).
-pub const LENGTHS: &[usize] = &[6];
+///
+/// Override with `LENGTHS=6,7,8,...`.
+pub static LENGTHS: LazyLock<Vec<usize>> = LazyLock::new(|| {
+    parse_lengths(
+        "LENGTHS",
+        &[
+            6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
+        ],
+    )
+});
 
 /// Bit-reversal kernel only kicks in at `n >= 10` (the SIMD path needs at
 /// least one full `LANES * LANES` chunk), so it has its own floor.
-pub const BIT_REVERSAL_LENGTHS: &[usize] =
-    &[10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24];
+///
+/// Override with `BIT_REVERSAL_LENGTHS=10,11,...`.
+pub static BIT_REVERSAL_LENGTHS: LazyLock<Vec<usize>> = LazyLock::new(|| {
+    parse_lengths(
+        "BIT_REVERSAL_LENGTHS",
+        &[10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24],
+    )
+});
 
 /// Planner-mode comparison stops at 2^18 — larger sizes blow out the
 /// per-bench budget when both `Heuristic` and `Tune` planners are
 /// constructed for the same `n`.
-pub const PLANNER_MODE_LENGTHS: &[usize] = &[5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18];
+///
+/// Override with `PLANNER_MODE_LENGTHS=5,6,...`.
+pub static PLANNER_MODE_LENGTHS: LazyLock<Vec<usize>> = LazyLock::new(|| {
+    parse_lengths(
+        "PLANNER_MODE_LENGTHS",
+        &[5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18],
+    )
+});
 
 /// Number of samples criterion collects per (group, id, size). 20 is a
 /// compromise between run time and stable medians; tighter convergence comes
 /// from running the bench multiple times rather than raising this number.
-pub const SAMPLE_SIZE: usize = 20;
+///
+/// Override with `SAMPLE_SIZE=50`.
+pub static SAMPLE_SIZE: LazyLock<usize> = LazyLock::new(|| {
+    env::var("SAMPLE_SIZE")
+        .ok()
+        .and_then(|v| v.parse().ok())
+        .unwrap_or(20)
+});
 
 /// Build a benchmark group with the project's standard config: log-x
 /// summary scale and `SAMPLE_SIZE` samples per (id, size).
@@ -47,7 +88,7 @@ pub fn make_group<'c>(c: &'c mut Criterion, name: &str) -> BenchmarkGroup<'c, Wa
     let mut group = c.benchmark_group(name);
     group
         .plot_config(PlotConfiguration::default().summary_scale(criterion::AxisScale::Logarithmic));
-    group.sample_size(SAMPLE_SIZE);
+    group.sample_size(*SAMPLE_SIZE);
     group
 }
 

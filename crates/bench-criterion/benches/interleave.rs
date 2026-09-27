@@ -17,7 +17,7 @@ macro_rules! deinterleave_bench {
             bench_at_sizes(
                 c,
                 $group,
-                LENGTHS,
+                &LENGTHS,
                 throughput_complex::<$float>,
                 |g, len| {
                     g.bench_function(BenchmarkId::new(ids::DEINTERLEAVE, len), |b| {
@@ -39,7 +39,7 @@ macro_rules! combine_bench {
             bench_at_sizes(
                 c,
                 $group,
-                LENGTHS,
+                &LENGTHS,
                 throughput_complex::<$float>,
                 |g, len| {
                     g.bench_function(BenchmarkId::new(ids::COMBINE_RE_IM, len), |b| {

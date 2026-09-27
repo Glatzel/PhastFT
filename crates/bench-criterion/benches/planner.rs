@@ -8,7 +8,7 @@ macro_rules! planner_bench {
             bench_at_sizes(
                 c,
                 $group,
-                LENGTHS,
+                &LENGTHS,
                 throughput_complex::<$float>,
                 |g, len| {
                     g.bench_function(BenchmarkId::new(ids::PHASTFT, len), |b| {
