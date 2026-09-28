@@ -72,7 +72,7 @@ jobs:
 
       - name: Plot
         run: |
-          uv run benches/plot_criterion_overlay.py \
+          uv run crates/bench-criterion/plot_criterion_overlay.py \
             --out-dir target/overlays
 
       - name: Upload overlays

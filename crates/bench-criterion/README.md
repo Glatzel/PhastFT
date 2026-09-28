@@ -37,12 +37,12 @@ The following environment variables can be used to override benchmark
 configuration values. For more details about these variables and their
 default values, see `src/common.rs`.
 
-| Env Variable           | Effected Target                           | Example                      |
-| ---------------------- | ----------------------------------------- | ---------------------------- |
-| `LENGTHS`              | `c2c_forward`, `c2c_inverse`, `r2c`,`c2r` | `LENGTHS=6,7,8`              |
-| `BIT_REVERSAL_LENGTHS` | `bit_reversal`                            | `BIT_REVERSAL_LENGTHS=10,11` |
-| `PLANNER_MODE_LENGTHS` | `planner`                                 | `PLANNER_MODE_LENGTHS=5,6`   |
-| `SAMPLE_SIZE`          | All                                       | `SAMPLE_SIZE=50`             |
+| Env Variable           | Effected Target                           | Example                                                 |
+| ---------------------- | ----------------------------------------- | ------------------------------------------------------- |
+| `LENGTHS`              | `c2c_forward`, `c2c_inverse`, `r2c`,`c2r` | `LENGTHS=6`, `LENGTHS=6,7,8`                            |
+| `BIT_REVERSAL_LENGTHS` | `bit_reversal`                            | `BIT_REVERSAL_LENGTHS=10`, `BIT_REVERSAL_LENGTHS=10,11` |
+| `PLANNER_MODE_LENGTHS` | `planner`                                 | `PLANNER_MODE_LENGTHS=5`, `PLANNER_MODE_LENGTHS=5,6`    |
+| `SAMPLE_SIZE`          | All                                       | `SAMPLE_SIZE=50`                                        |
 
 ## Benchmark organization
 
