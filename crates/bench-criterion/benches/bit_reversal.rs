@@ -163,7 +163,7 @@ macro_rules! bit_reversal_bench {
             bench_at_sizes(
                 c,
                 $group,
-                BIT_REVERSAL_LENGTHS,
+                &BIT_REVERSAL_LENGTHS,
                 throughput_real::<$float>,
                 |g, len| {
                 let n = len.trailing_zeros() as usize;
