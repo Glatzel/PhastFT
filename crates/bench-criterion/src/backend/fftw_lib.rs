@@ -26,7 +26,7 @@ use fftw::plan::{
     R2RPlan, R2RPlan32, R2RPlan64,
 };
 use fftw::types::{Flag, R2RKind, Sign};
-use fftw_sys::fftw_forget_wisdom;
+use fftw_sys::{fftw_forget_wisdom, fftwf_forget_wisdom};
 use utilities::rustfft::num_complex::Complex;
 
 use crate::common::{
@@ -86,7 +86,10 @@ fn per_mode(mut f: impl FnMut(Mode)) {
     for mode in Mode::ALL {
         f(mode);
         // SAFETY: argument-free FFI call.
-        unsafe { fftw_forget_wisdom() };
+        unsafe {
+            fftwf_forget_wisdom();
+            fftw_forget_wisdom();
+        }
     }
 }
 
