@@ -34,12 +34,12 @@ mkdir -p \
   "$OUTPUT_DIR/phastft" \
   "$OUTPUT_DIR/fftwrb"
 
-echo "[build] cargo build --profile bench --examples"
-(cd .. && cargo build --profile bench --examples)
+echo "[build] cargo build --profile bench -p bench-shell"
+(cargo build --profile bench -p bench-shell)
 
-PHASTFT_BIN=../target/bench/benchmark
-RUSTFFT_BIN=../target/bench/rustfft
-FFTWRB_BIN=../target/bench/fftwrb
+PHASTFT_BIN=./target/release/benchmark
+RUSTFFT_BIN=./target/release/rustfft
+FFTWRB_BIN=./target/release/fftwrb
 
 echo "[run] precision=f${precision} budget_ns=${budget_ns}"
 

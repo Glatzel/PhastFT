@@ -10,6 +10,6 @@ fi
 
 cargo build -p bench-profile --profile profiling
 
-sudo perf record --call-graph=dwarf ./target/profiling/profile $1 && sudo perf script -f -F +pid > processed_result.perf
+sudo perf record --call-graph=dwarf ./target/profiling/bench-profile $1 && sudo perf script -f -F +pid > processed_result.perf
 
 echo "done! results in process_result.perf"

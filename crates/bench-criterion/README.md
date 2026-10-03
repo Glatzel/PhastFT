@@ -37,7 +37,7 @@ The following environment variables can be used to override benchmark
 configuration values. For more details about these variables and their
 default values, see `src/common.rs`.
 
-| Env Variable           | Effected Target                           | Example                                                 |
+| Env Variable           | Affected Target                           | Example                                                 |
 | ---------------------- | ----------------------------------------- | ------------------------------------------------------- |
 | `LENGTHS`              | `c2c_forward`, `c2c_inverse`, `r2c`,`c2r` | `LENGTHS=6`, `LENGTHS=6,7,8`                            |
 | `BIT_REVERSAL_LENGTHS` | `bit_reversal`                            | `BIT_REVERSAL_LENGTHS=10`, `BIT_REVERSAL_LENGTHS=10,11` |

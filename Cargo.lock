@@ -77,6 +77,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2af50177e190e07a26ab74f8b1efbfe2ef87da2116221318cb1c2e82baf7de06"
 
 [[package]]
+name = "bench-profile"
+version = "0.4.1"
+dependencies = [
+ "phastft",
+ "utilities",
+]
+
+[[package]]
 name = "bench-shell"
 version = "0.4.1"
 dependencies = [
@@ -909,14 +917,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8fd00f0bb2e90d81d1044c2b32617f68fcb9fa3bb7640c23e9c748e53fb30934"
 dependencies = [
  "unicode-ident",
-]
-
-[[package]]
-name = "profile"
-version = "0.4.1"
-dependencies = [
- "phastft",
- "utilities",
 ]
 
 [[package]]

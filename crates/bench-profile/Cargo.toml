@@ -1,5 +1,5 @@
 [package]
-name = "profile"
+name = "bench-profile"
 version.workspace = true
 authors.workspace = true
 edition.workspace = true

@@ -29,7 +29,7 @@ Benchmarking platform:
 
 From the **repo root**, run the following:
 ```sh
-cargo bench --profile bench --bench bit_reversal
+cargo bench --bench bit_reversal
 ```
 
 ### Render the plots
